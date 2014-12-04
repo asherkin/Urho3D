@@ -245,6 +245,8 @@ public:
     int GetWidth() const { return width_; }
     /// Return window height.
     int GetHeight() const { return height_; }
+    /// Return window pixel ratio.
+    float GetPixelRatio() const { return pixelRatio_; }
     /// Return multisample mode (1 = no multisampling.)
     int GetMultiSample() const { return multiSample_; }
     /// Return whether window is fullscreen.
@@ -470,6 +472,8 @@ private:
     int width_;
     /// Window height.
     int height_;
+    /// Window pixel ratio.
+    float pixelRatio_;
     /// Window position.
     IntVector2 position_;
     /// Multisampling mode.

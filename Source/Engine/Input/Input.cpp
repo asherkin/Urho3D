@@ -875,7 +875,7 @@ IntVector2 Input::GetMousePosition() const
 
     SDL_GetMouseState(&ret.x_, &ret.y_);
 
-    return ret;
+    return ret * graphics_->GetPixelRatio();
 }
 
 TouchState* Input::GetTouch(unsigned index) const
@@ -1239,7 +1239,7 @@ void Input::SetMousePosition(const IntVector2& position)
     if (!graphics_)
         return;
 
-    SDL_WarpMouseInWindow(graphics_->GetImpl()->GetWindow(), position.x_, position.y_);
+    SDL_WarpMouseInWindow(graphics_->GetImpl()->GetWindow(), position.x_ / graphics_->GetPixelRatio(), position.y_ / graphics_->GetPixelRatio());
 }
 
 void Input::HandleSDLEvent(void* sdlEvent)

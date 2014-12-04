@@ -222,6 +222,7 @@ Graphics::Graphics(Context* context_) :
     externalWindow_(0),
     width_(0),
     height_(0),
+    pixelRatio_(1),
     position_(SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED),
     multiSample_(1),
     fullscreen_(false),
@@ -426,7 +427,7 @@ bool Graphics::SetMode(int width, int height, bool fullscreen, bool borderless, 
         int x = fullscreen ? 0 : position_.x_;
         int y = fullscreen ? 0 : position_.y_;
 
-        unsigned flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+        unsigned flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
         if (fullscreen)
             flags |= SDL_WINDOW_FULLSCREEN;
         if (resizable)
@@ -471,7 +472,7 @@ bool Graphics::SetMode(int width, int height, bool fullscreen, bool borderless, 
         if (maximize)
         {
             Maximize();
-            SDL_GetWindowSize(impl_->window_, &width, &height);
+            SDL_GL_GetDrawableSize(impl_->window_, &width, &height);
         }
         
         // Create/restore context and GPU objects and set initial renderstate
@@ -543,7 +544,12 @@ bool Graphics::SetMode(int width, int height, bool fullscreen, bool borderless, 
     tripleBuffer_ = tripleBuffer;
     multiSample_ = multiSample;
     
-    SDL_GetWindowSize(impl_->window_, &width_, &height_);
+    SDL_GL_GetDrawableSize(impl_->window_, &width_, &height_);
+    
+    int pointWidth;
+    SDL_GetWindowSize(impl_->window_, &pointWidth, NULL);
+    pixelRatio_ = width_ / (float)pointWidth;
+    
     SDL_GetWindowPosition(impl_->window_, &position_.x_, &position_.y_);
     
     // Reset rendertargets and viewport for the new screen mode
@@ -644,7 +650,7 @@ bool Graphics::BeginFrame()
     {
         int width, height;
         
-        SDL_GetWindowSize(impl_->window_, &width, &height);
+        SDL_GL_GetDrawableSize(impl_->window_, &width, &height);
         if (width != width_ || height != height_)
             SetMode(width, height);
     }
@@ -662,7 +668,7 @@ bool Graphics::BeginFrame()
     
     numPrimitives_ = 0;
     numBatches_ = 0;
-    
+	
     SendEvent(E_BEGINRENDERING);
     
     return true;
@@ -2172,13 +2178,17 @@ void Graphics::WindowResized()
 
     int newWidth, newHeight;
     
-    SDL_GetWindowSize(impl_->window_, &newWidth, &newHeight);
+    SDL_GL_GetDrawableSize(impl_->window_, &newWidth, &newHeight);
     if (newWidth == width_ && newHeight == height_)
         return;
 
     width_ = newWidth;
     height_ = newHeight;
-    
+	
+	int pointWidth;
+	SDL_GetWindowSize(impl_->window_, &pointWidth, NULL);
+	pixelRatio_ = width_ / (float)pointWidth;
+	
     // Reset rendertargets and viewport for the new screen size
     ResetRenderTargets();
     
