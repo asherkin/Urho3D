@@ -669,6 +669,9 @@ bool Graphics::BeginFrame()
     numPrimitives_ = 0;
     numBatches_ = 0;
 	
+	glPointSize(4.0f * pixelRatio_);
+	glLineWidth(2.0f * pixelRatio_);
+    
     SendEvent(E_BEGINRENDERING);
     
     return true;
