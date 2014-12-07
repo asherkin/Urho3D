@@ -133,6 +133,8 @@ FontFace* Font::GetFace(int pointSize)
     if (!graphics)
         return 0;
 
+    pointSize *= graphics->GetPixelRatio();
+
     // For bitmap font type, always return the same font face provided by the font's bitmap file regardless of the actual requested point size
     if (fontType_ == FONT_BITMAP)
         pointSize = 0;
