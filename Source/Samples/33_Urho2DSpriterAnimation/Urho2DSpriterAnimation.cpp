@@ -20,24 +20,25 @@
 // THE SOFTWARE.
 //
 
-#include "AnimatedSprite2D.h"
-#include "AnimationSet2D.h"
-#include "Camera.h"
-#include "CoreEvents.h"
-#include "Drawable2D.h"
-#include "Engine.h"
-#include "Font.h"
-#include "Graphics.h"
-#include "Input.h"
-#include "Octree.h"
-#include "Renderer.h"
-#include "ResourceCache.h"
-#include "Scene.h"
-#include "Text.h"
-#include "Urho2DSpriterAnimation.h"
-#include "Zone.h"
+#include <Urho3D/Urho2D/AnimatedSprite2D.h>
+#include <Urho3D/Urho2D/AnimationSet2D.h>
+#include <Urho3D/Graphics/Camera.h>
+#include <Urho3D/Core/CoreEvents.h>
+#include <Urho3D/Urho2D/Drawable2D.h>
+#include <Urho3D/Engine/Engine.h>
+#include <Urho3D/UI/Font.h>
+#include <Urho3D/Graphics/Graphics.h>
+#include <Urho3D/Input/Input.h>
+#include <Urho3D/Graphics/Octree.h>
+#include <Urho3D/Graphics/Renderer.h>
+#include <Urho3D/Resource/ResourceCache.h>
+#include <Urho3D/Scene/Scene.h>
+#include <Urho3D/UI/Text.h>
+#include <Urho3D/Graphics/Zone.h>
 
-#include "DebugNew.h"
+#include "Urho2DSpriterAnimation.h"
+
+#include <Urho3D/DebugNew.h>
 
 static const char* animationNames[] =
 {
@@ -91,6 +92,7 @@ void Urho2DSpriterAnimation::CreateScene()
 
     Graphics* graphics = GetSubsystem<Graphics>();
     camera->SetOrthoSize((float)graphics->GetHeight() * PIXEL_SIZE);
+    camera->SetZoom(1.5f * Min((float)graphics->GetWidth() / 1280.0f, (float)graphics->GetHeight() / 800.0f)); // Set zoom according to user's resolution to ensure full visibility (initial zoom (1.5) is set for full visibility at 1280x800 resolution)
 
     ResourceCache* cache = GetSubsystem<ResourceCache>();  
     AnimationSet2D* animationSet = cache->GetResource<AnimationSet2D>("Urho2D/imp/imp.scml");
@@ -98,7 +100,6 @@ void Urho2DSpriterAnimation::CreateScene()
         return;
 
     spriteNode_ = scene_->CreateChild("SpriterAnimation");
-    spriteNode_->SetPosition(Vector3(-1.4f, 2.0f, 0.0f));
 
     AnimatedSprite2D* animatedSprite = spriteNode_->CreateComponent<AnimatedSprite2D>();
     animatedSprite->SetAnimation(animationSet, animationNames[animationIndex_]);
@@ -113,6 +114,7 @@ void Urho2DSpriterAnimation::CreateInstructions()
     Text* instructionText = ui->GetRoot()->CreateChild<Text>();
     instructionText->SetText("Mouse click to play next animation, \nUse WASD keys to move, use PageUp PageDown keys to zoom.");
     instructionText->SetFont(cache->GetResource<Font>("Fonts/Anonymous Pro.ttf"), 15);
+    instructionText->SetTextAlignment(HA_CENTER); // Center rows in relation to each other
 
     // Position the text relative to the screen center
     instructionText->SetHorizontalAlignment(HA_CENTER);

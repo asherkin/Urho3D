@@ -20,17 +20,17 @@
 // THE SOFTWARE.
 //
 
-#include "CoreEvents.h"
-#include "Engine.h"
-#include "Font.h"
-#include "Input.h"
-#include "ProcessUtils.h"
-#include "Text.h"
-#include "UI.h"
+#include <Urho3D/Core/CoreEvents.h>
+#include <Urho3D/Engine/Engine.h>
+#include <Urho3D/UI/Font.h>
+#include <Urho3D/Input/Input.h>
+#include <Urho3D/Core/ProcessUtils.h>
+#include <Urho3D/UI/Text.h>
+#include <Urho3D/UI/UI.h>
 
 #include "HelloWorld.h"
 
-#include "DebugNew.h"
+#include <Urho3D/DebugNew.h>
 
 // Expands to this example's entry-point
 DEFINE_APPLICATION_MAIN(HelloWorld)

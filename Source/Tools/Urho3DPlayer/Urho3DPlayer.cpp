@@ -20,26 +20,26 @@
 // THE SOFTWARE.
 //
 
-#include "Engine.h"
-#include "FileSystem.h"
-#include "Log.h"
-#include "Main.h"
-#include "ProcessUtils.h"
-#include "ResourceCache.h"
-#include "ResourceEvents.h"
+#include <Urho3D/Engine/Engine.h>
+#include <Urho3D/IO/FileSystem.h>
+#include <Urho3D/IO/Log.h>
+#include <Urho3D/Core/Main.h>
+#include <Urho3D/Core/ProcessUtils.h>
+#include <Urho3D/Resource/ResourceCache.h>
+#include <Urho3D/Resource/ResourceEvents.h>
 
 #ifdef URHO3D_ANGELSCRIPT
-#include "ScriptFile.h"
-#include "Script.h"
+#include <Urho3D/Script/ScriptFile.h>
+#include <Urho3D/Script/Script.h>
 #endif
 
 #ifdef URHO3D_LUA
-#include "LuaScript.h"
+#include <Urho3D/LuaScript/LuaScript.h>
 #endif
 
 #include "Urho3DPlayer.h"
 
-#include "DebugNew.h"
+#include <Urho3D/DebugNew.h>
 
 DEFINE_APPLICATION_MAIN(Urho3DPlayer);
 
@@ -108,6 +108,7 @@ void Urho3DPlayer::Setup()
             "-portrait    Use portrait orientations (iOS only)\n"
             "-prepass     Use light pre-pass rendering\n"
             "-deferred    Use deferred rendering\n"
+            "-renderpath <name> Use the named renderpath (must enter full resource name)\n"
             "-lqshadows   Use low-quality (1-sample) shadow filtering\n"
             "-noshadows   Disable shadow rendering\n"
             "-nolimit     Disable frame limiter\n"

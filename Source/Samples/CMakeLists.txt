@@ -31,7 +31,7 @@ include_directories (${URHO3D_INCLUDE_DIRS})
 set (COMMON_SAMPLE_H_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Sample.h" "${CMAKE_CURRENT_SOURCE_DIR}/Sample.inl")
 
 # Define dependency libs
-set (INCLUDE_DIRS_ONLY ${CMAKE_CURRENT_SOURCE_DIR})
+set (INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Add samples
 add_subdirectory (01_HelloWorld)
@@ -85,3 +85,4 @@ add_subdirectory (31_MaterialAnimation)
 add_subdirectory (34_DynamicGeometry)
 add_subdirectory (35_SignedDistanceFieldText)
 add_subdirectory (37_UIDrag)
+add_subdirectory (38_SceneAndUILoad)

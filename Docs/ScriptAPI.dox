@@ -361,6 +361,14 @@ namespace Urho3D
 - %Scene : Scene pointer
 - %TimeStep : float
 
+### AttributeAnimationAdded
+- %ObjectAnimation : Object animation pointer
+- %AttributeAnimationName : String
+
+### AttributeAnimationRemoved
+- %ObjectAnimation : Object animation pointer
+- %AttributeAnimationName : String
+
 ### ScenePostUpdate
 - %Scene : Scene pointer
 - %TimeStep : float
@@ -660,6 +668,7 @@ namespace Urho3D
 - %Animation %States : VariantVector
 
 ### AnimatedSprite2D
+- %Is %Enabled : bool
 - %Flip X : bool
 - %Flip Y : bool
 - %Color : Color
@@ -848,6 +857,7 @@ namespace Urho3D
 - %Checked %Image %Offset : IntVector2
 
 ### CollisionBox2D
+- %Is %Enabled : bool
 - %Size : Vector2
 - %Center : Vector2
 - %Angle : float
@@ -860,6 +870,7 @@ namespace Urho3D
 - %Restitution : float
 
 ### CollisionChain2D
+- %Is %Enabled : bool
 - %Loop : bool
 - %Trigger : bool
 - %Category %Bits : int
@@ -868,8 +879,10 @@ namespace Urho3D
 - %Density : float
 - %Friction : float
 - %Restitution : float
+- %Vertices : Buffer
 
 ### CollisionCircle2D
+- %Is %Enabled : bool
 - %Radius : float
 - %Center : Vector2
 - %Trigger : bool
@@ -881,6 +894,7 @@ namespace Urho3D
 - %Restitution : float
 
 ### CollisionEdge2D
+- %Is %Enabled : bool
 - %Vertex 1 : Vector2
 - %Vertex 2 : Vector2
 - %Trigger : bool
@@ -892,6 +906,7 @@ namespace Urho3D
 - %Restitution : float
 
 ### CollisionPolygon2D
+- %Is %Enabled : bool
 - %Trigger : bool
 - %Category %Bits : int
 - %Mask %Bits : int
@@ -899,6 +914,7 @@ namespace Urho3D
 - %Density : float
 - %Friction : float
 - %Restitution : float
+- %Vertices : Buffer
 
 ### CollisionShape
 - %Is %Enabled : bool
@@ -926,6 +942,7 @@ namespace Urho3D
 - %Disable %Collision : bool
 
 ### ConstraintDistance2D
+- %Is %Enabled : bool
 - %Owner %Body %Anchor : Vector2
 - %Other %Body %Anchor : Vector2
 - %Frequency %Hz : float
@@ -933,16 +950,19 @@ namespace Urho3D
 - %Collide %Connected : bool
 
 ### ConstraintFriction2D
+- %Is %Enabled : bool
 - %Anchor : Vector2
 - %Max %Force : float
 - %Max %Torque : float
 - %Collide %Connected : bool
 
 ### ConstraintGear2D
+- %Is %Enabled : bool
 - %Ratio : float
 - %Collide %Connected : bool
 
 ### ConstraintMotor2D
+- %Is %Enabled : bool
 - %Linear %Offset : Vector2
 - %Angular %Offset : float
 - %Max %Force : float
@@ -951,6 +971,7 @@ namespace Urho3D
 - %Collide %Connected : bool
 
 ### ConstraintMouse2D
+- %Is %Enabled : bool
 - %Target : Vector2
 - %Max %Force : float
 - %Frequency %Hz : float
@@ -958,6 +979,7 @@ namespace Urho3D
 - %Collide %Connected : bool
 
 ### ConstraintPrismatic2D
+- %Is %Enabled : bool
 - %Anchor : Vector2
 - %Axis : Vector2
 - %Enable %Limit : bool
@@ -969,6 +991,7 @@ namespace Urho3D
 - %Collide %Connected : bool
 
 ### ConstraintPulley2D
+- %Is %Enabled : bool
 - %Owner %Body %Ground %Anchor : Vector2
 - %Other %Body %Ground %Anchor : Vector2
 - %Owner %Body %Anchor : Vector2
@@ -977,6 +1000,7 @@ namespace Urho3D
 - %Collide %Connected : bool
 
 ### ConstraintRevolute2D
+- %Is %Enabled : bool
 - %Anchor : Vector2
 - %Enable %Limit : bool
 - %Lower %Angle : float
@@ -987,18 +1011,21 @@ namespace Urho3D
 - %Collide %Connected : bool
 
 ### ConstraintRope2D
+- %Is %Enabled : bool
 - %Owner %Body %Anchor : Vector2
 - %Other %Body %Anchor : Vector2
 - %Max %Length : float
 - %Collide %Connected : bool
 
 ### ConstraintWeld2D
+- %Is %Enabled : bool
 - %Anchor : Vector2
 - %Frequency %Hz : float
 - %Damping %Ratio : float
 - %Collide %Connected : bool
 
 ### ConstraintWheel2D
+- %Is %Enabled : bool
 - %Anchor : Vector2
 - %Axis : Vector2
 - %Enable %Motor : bool
@@ -1371,6 +1398,7 @@ namespace Urho3D
 - %Serialize %Particles : bool
 
 ### ParticleEmitter2D
+- %Is %Enabled : bool
 - %Particle %Effect : ResourceRef
 - %Sprite : ResourceRef
 - %Layer : int
@@ -1434,6 +1462,7 @@ namespace Urho3D
 - %Gravity %Override : Vector3
 
 ### RigidBody2D
+- %Is %Enabled : bool
 - %Body %Type : int
 - %Mass : float
 - %Inertia : float
@@ -1615,7 +1644,7 @@ namespace Urho3D
 ### SoundSource
 - %Is %Enabled : bool
 - %Sound : ResourceRef
-- %Sound %Type : int
+- %Type : String
 - %Frequency : float
 - %Gain : float
 - %Attenuation : float
@@ -1627,7 +1656,7 @@ namespace Urho3D
 ### SoundSource3D
 - %Is %Enabled : bool
 - %Sound : ResourceRef
-- %Sound %Type : int
+- %Type : String
 - %Frequency : float
 - %Gain : float
 - %Is %Playing : bool
@@ -1704,6 +1733,7 @@ namespace Urho3D
 - %Instance %Nodes : VariantVector
 
 ### StaticSprite2D
+- %Is %Enabled : bool
 - %Sprite : ResourceRef
 - %Flip X : bool
 - %Flip Y : bool
@@ -1805,6 +1835,7 @@ namespace Urho3D
 - %Effect %Depth %Bias : float
 
 ### TileMap2D
+- %Is %Enabled : bool
 - %Tmx %File : ResourceRef
 
 ### ToolTip
@@ -2650,6 +2681,7 @@ Properties:
 
 Methods:
 
+- bool HasMasterGain(const String&) const
 - bool Play()
 - void SendEvent(const String&, VariantMap& = VariantMap ( ))
 - void SetMode(int, int, bool, bool = true)
@@ -4782,6 +4814,7 @@ Methods:
 - void BringToFront()
 - UIElement@ CreateChild(const String&, const String& = String ( ), uint = M_MAX_UNSIGNED)
 - void DefineShape(CursorShape, Texture@, const IntRect&, const IntVector2&)
+- void DefineShape(const String&, Texture@, const IntRect&, const IntVector2&)
 - void DisableLayoutUpdate()
 - IntVector2 ElementToScreen(const IntVector2&)
 - void EnableLayoutUpdate()
@@ -4840,6 +4873,8 @@ Methods:
 - void SetMinSize(int, int)
 - void SetParent(UIElement@, uint = M_MAX_UNSIGNED)
 - void SetPosition(int, int)
+- void SetShape(CursorShape)
+- void SetShape(const String&)
 - void SetSize(int, int)
 - bool SetStyle(const String&, XMLFile@ = null)
 - bool SetStyle(const XMLElement&)
@@ -4914,7 +4949,7 @@ Properties:
 - UIElement@ root // readonly
 - IntVector2 screenPosition // readonly
 - bool selected
-- CursorShape shape
+- String shape
 - IntVector2 size
 - bool sortChildren
 - String style
@@ -5223,6 +5258,7 @@ Methods:
 - Vector2 ReadVector2()
 - Vector3 ReadVector3()
 - Vector4 ReadVector4()
+- VectorBuffer ReadVectorBuffer(uint)
 - uint Seek(uint)
 
 Properties:
@@ -5647,6 +5683,7 @@ Methods:
 - Vector2 ReadVector2()
 - Vector3 ReadVector3()
 - Vector4 ReadVector4()
+- VectorBuffer ReadVectorBuffer(uint)
 - uint Seek(uint)
 - void SendEvent(const String&, VariantMap& = VariantMap ( ))
 - uint Write(uint8[]@)
@@ -5679,6 +5716,7 @@ Methods:
 - bool WriteVector2(const Vector2&)
 - bool WriteVector3(const Vector3&)
 - bool WriteVector4(const Vector4&)
+- bool WriteVectorBuffer(const VectorBuffer&)
 
 Properties:
 
@@ -5874,6 +5912,7 @@ Properties:
 - uint numBatches // readonly
 - uint numPrimitives // readonly
 - String orientations
+- bool readableDepthSupport // readonly
 - int refs // readonly
 - bool resizable // readonly
 - IntVector2[]@ resolutions // readonly
@@ -5927,6 +5966,7 @@ Methods:
 - Vector2 ReadVector2()
 - Vector3 ReadVector3()
 - Vector4 ReadVector4()
+- VectorBuffer ReadVectorBuffer(uint)
 - uint Seek(uint)
 
 Properties:
@@ -8274,6 +8314,7 @@ Properties:
 - float clearDepth
 - uint clearFlags
 - uint clearStencil
+- String depthStencilName
 - bool enabled
 - bool markToStencil
 - String metadata
@@ -8414,7 +8455,8 @@ Properties:
 Methods:
 
 - bool AddManualResource(Resource@)
-- void AddPackageFile(PackageFile@, uint = M_MAX_UNSIGNED)
+- bool AddPackageFile(PackageFile@, uint = M_MAX_UNSIGNED)
+- bool AddPackageFile(const String&, uint = M_MAX_UNSIGNED)
 - bool AddResourceDir(const String&, uint = M_MAX_UNSIGNED)
 - bool BackgroundLoadResource(const String&, const String&, bool = true)
 - bool Exists(const String&) const
@@ -8818,7 +8860,7 @@ Properties:
 
 Methods:
 
-- void DumpAPI(DumpMode = DOXYGEN)
+- void DumpAPI(DumpMode = DOXYGEN, const String& = String ( ))
 - bool Execute(const String&)
 - void SendEvent(const String&, VariantMap& = VariantMap ( ))
 
@@ -9320,6 +9362,7 @@ Methods:
 - bool WriteVector2(const Vector2&)
 - bool WriteVector3(const Vector3&)
 - bool WriteVector4(const Vector4&)
+- bool WriteVectorBuffer(const VectorBuffer&)
 
 <a name="Class_Skeleton"></a>
 
@@ -9761,7 +9804,7 @@ Properties:
 - bool playing // readonly
 - int refs // readonly
 - Sound@ sound // readonly
-- SoundType soundType
+- String soundType
 - bool temporary
 - float timePosition // readonly
 - StringHash type // readonly
@@ -9831,7 +9874,7 @@ Properties:
 - int refs // readonly
 - float rolloffFactor
 - Sound@ sound // readonly
-- SoundType soundType
+- String soundType
 - bool temporary
 - float timePosition // readonly
 - StringHash type // readonly
@@ -11160,7 +11203,7 @@ Properties:
 - Variant[] attributes
 - StringHash baseType // readonly
 - String category // readonly
-- int drawOrder // writeonly
+- int drawOrder
 - bool enabled
 - bool enabledEffective // readonly
 - int height // readonly
@@ -11172,7 +11215,6 @@ Properties:
 - uint numObjects // readonly
 - ObjectAnimation@ objectAnimation
 - int refs // readonly
-- int rrawOrder // readonly
 - bool temporary
 - StringHash type // readonly
 - String typeName // readonly
@@ -11665,6 +11707,7 @@ Methods:
 - float GetFloat() const
 - int GetInt() const
 - RefCounted@ GetPtr() const
+- ScriptObject@ GetScriptObject() const
 - StringHash GetStringHash() const
 - uint GetUInt() const
 - Variant[]@ GetVariantVector() const
@@ -11815,6 +11858,7 @@ Methods:
 - Vector2 ReadVector2()
 - Vector3 ReadVector3()
 - Vector4 ReadVector4()
+- VectorBuffer ReadVectorBuffer(uint)
 - void Resize(uint)
 - uint Seek(uint)
 - void SetData(Deserializer@, uint)
@@ -11848,6 +11892,7 @@ Methods:
 - bool WriteVector2(const Vector2&)
 - bool WriteVector3(const Vector3&)
 - bool WriteVector4(const Vector4&)
+- bool WriteVectorBuffer(const VectorBuffer&)
 
 Properties:
 
@@ -12538,13 +12583,17 @@ Properties:
 ### CursorShape
 
 - CS_NORMAL
+- CS_IBEAM
+- CS_CROSS
 - CS_RESIZEVERTICAL
 - CS_RESIZEDIAGONAL_TOPRIGHT
 - CS_RESIZEHORIZONTAL
 - CS_RESIZEDIAGONAL_TOPLEFT
+- CS_RESIZE_ALL
 - CS_ACCEPTDROP
 - CS_REJECTDROP
 - CS_BUSY
+- CS_BUSY_ARROW
 
 
 ### DumpMode
@@ -12729,6 +12778,7 @@ Properties:
 - CMD_QUAD
 - CMD_FORWARDLIGHTS
 - CMD_LIGHTVOLUMES
+- CMD_RENDERUI
 
 
 ### RenderSurfaceUpdateMode
@@ -12756,15 +12806,6 @@ Properties:
 - SHAPE_TRIANGLEMESH
 - SHAPE_CONVEXHULL
 - SHAPE_TERRAIN
-
-
-### SoundType
-
-- SOUND_EFFECT
-- SOUND_AMBIENT
-- SOUND_VOICE
-- SOUND_MUSIC
-- SOUND_MASTER
 
 
 ### TextEffect
@@ -12949,6 +12990,7 @@ Properties:
 - uint GetRGFloat16Format()
 - uint GetRGFloat32Format()
 - uint GetRandomSeed()
+- uint GetReadableDepthFormat()
 - String GetTextureUnitName(TextureUnit)
 - bool IsAbsolutePath(const String&)
 - bool IsAlpha(uint)
@@ -13072,8 +13114,8 @@ Properties:
 - uint DEFAULT_VIEWMASK
 - uint DRAWABLE_ANY
 - uint DRAWABLE_GEOMETRY
+- uint DRAWABLE_GEOMETRY2D
 - uint DRAWABLE_LIGHT
-- uint DRAWABLE_PROXYGEOMETRY
 - uint DRAWABLE_ZONE
 - uint FIRST_LOCAL_ID
 - uint FIRST_REPLICATED_ID
@@ -13481,6 +13523,11 @@ Properties:
 - int SHADOWQUALITY_HIGH_24BIT
 - int SHADOWQUALITY_LOW_16BIT
 - int SHADOWQUALITY_LOW_24BIT
+- String SOUND_AMBIENT
+- String SOUND_EFFECT
+- String SOUND_MASTER
+- String SOUND_MUSIC
+- String SOUND_VOICE
 - Color TRANSPARENT
 - uint VO_DISABLE_OCCLUSION
 - uint VO_DISABLE_SHADOWS

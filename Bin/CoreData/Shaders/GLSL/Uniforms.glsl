@@ -24,7 +24,7 @@ uniform mat4 cZone;
     uniform mat4 cLightMatrices[2];
 #endif
 #ifdef SKINNED
-    #ifdef RASPI
+    #ifdef RPI
         uniform vec4 cSkinMatrices[32*3];
     #else
         uniform vec4 cSkinMatrices[64*3];
@@ -43,6 +43,7 @@ uniform mat4 cZone;
 uniform vec3 cAmbientColor;
 uniform vec3 cCameraPosPS;
 uniform float cDeltaTimePS;
+uniform vec4 cDepthReconstruct;
 uniform float cElapsedTimePS;
 uniform vec4 cFogParams;
 uniform vec3 cFogColor;

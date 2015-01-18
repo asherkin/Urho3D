@@ -49,7 +49,7 @@ elseif (ANDROID)
     )
 else ()
     # On Linux, make sure development libraries exist, and use their include file directories  
-    if (RASPI)
+    if (RPI)
         file (GLOB VIDEO_DRIVER_C_FILES src/video/raspberry/*.c src/core/linux/*.c)
     else ()
         find_package (OpenGL REQUIRED)
@@ -112,13 +112,18 @@ file (GLOB H_FILES include/*.h)
 set_source_files_properties (${C_FILES} PROPERTIES LANGUAGE C)
 set_source_files_properties (${SYS_C_FILES} PROPERTIES LANGUAGE C)
 set (SOURCE_FILES ${C_FILES} ${SYS_C_FILES} ${H_FILES})
-# Install dependency for SDL_android_main.c, D3D9GraphicsImpl.h, OGLGraphicsImpl.h, InputEvents.h, File.h, and Cursor.h
-install (DIRECTORY include/ DESTINATION ${DEST_INCLUDE_DIR}/SDL ${DEST_PERMISSIONS} FILES_MATCHING PATTERN *.h)     # Note: the trailing slash is significant
-set (INSTALL_INCLUDE_DIRS ${INSTALL_INCLUDE_DIRS} SDL PARENT_SCOPE)
-install (FILES src/main/android/SDL_android_main.c DESTINATION ${DEST_INCLUDE_DIR})
 
 # Define dependency libs
-set (INCLUDE_DIRS_ONLY include)
+set (INCLUDE_DIRS include)
 
 # Setup target
 setup_library ()
+
+# Install headers for building and using the Urho3D library (install dependency for D3D9GraphicsImpl.h, OGLGraphicsImpl.h, InputEvents.h, File.h, and Cursor.h)
+install_header_files (DIRECTORY include/ DESTINATION ${DEST_INCLUDE_DIR}/ThirdParty/SDL FILES_MATCHING PATTERN *.h USE_FILE_SYMLINK)    # Note: the trailing slash is significant
+# Install dependency for SDL_android_main.c
+if (ANDROID)
+    install_header_files (DIRECTORY src/main/android DESTINATION ${DEST_INCLUDE_DIR}/ThirdParty/SDL)
+    install_header_files (FILES src/SDL_internal.h DESTINATION ${DEST_INCLUDE_DIR}/ThirdParty/SDL)
+    install_header_files (DIRECTORY src/dynapi DESTINATION ${DEST_INCLUDE_DIR}/ThirdParty/SDL FILES_MATCHING PATTERN *.h)
+endif ()

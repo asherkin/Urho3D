@@ -20,14 +20,15 @@
 // THE SOFTWARE.
 //
 
-#include "AnimatedModel.h"
-#include "CreateRagdoll.h"
-#include "Log.h"
-#include "Node.h"
-#include "RigidBody.h"
-#include "PhysicsEvents.h"
+#include <Urho3D/Graphics/AnimatedModel.h>
+#include <Urho3D/IO/Log.h>
+#include <Urho3D/Scene/Node.h>
+#include <Urho3D/Physics/RigidBody.h>
+#include <Urho3D/Physics/PhysicsEvents.h>
 
-#include "DebugNew.h"
+#include "CreateRagdoll.h"
+
+#include <Urho3D/DebugNew.h>
 
 CreateRagdoll::CreateRagdoll(Context* context) :
     Component(context)

@@ -20,34 +20,34 @@
 // THE SOFTWARE.
 //
 
-#include "AnimatedModel.h"
-#include "Animation.h"
-#include "Context.h"
-#include "DebugRenderer.h"
-#include "File.h"
-#include "FileSystem.h"
-#include "Geometry.h"
-#include "Graphics.h"
-#include "IndexBuffer.h"
-#include "Light.h"
-#include "Material.h"
-#include "Model.h"
-#include "Octree.h"
+#include <Urho3D/Graphics/AnimatedModel.h>
+#include <Urho3D/Graphics/Animation.h>
+#include <Urho3D/Core/Context.h>
+#include <Urho3D/Graphics/DebugRenderer.h>
+#include <Urho3D/IO/File.h>
+#include <Urho3D/IO/FileSystem.h>
+#include <Urho3D/Graphics/Geometry.h>
+#include <Urho3D/Graphics/Graphics.h>
+#include <Urho3D/Graphics/IndexBuffer.h>
+#include <Urho3D/Graphics/Light.h>
+#include <Urho3D/Graphics/Material.h>
+#include <Urho3D/Graphics/Model.h>
+#include <Urho3D/Graphics/Octree.h>
 #ifdef URHO3D_PHYSICS
-#include "PhysicsWorld.h"
+#include <Urho3D/Physics/PhysicsWorld.h>
 #endif
-#include "ProcessUtils.h"
-#include "Quaternion.h"
-#include "ResourceCache.h"
-#include "Scene.h"
-#include "StringUtils.h"
-#include "Vector3.h"
-#include "VertexBuffer.h"
-#include "WorkQueue.h"
-#include "XMLFile.h"
-#include "Zone.h"
+#include <Urho3D/Core/ProcessUtils.h>
+#include <Urho3D/Math/Quaternion.h>
+#include <Urho3D/Resource/ResourceCache.h>
+#include <Urho3D/Scene/Scene.h>
+#include <Urho3D/Core/StringUtils.h>
+#include <Urho3D/Math/Vector3.h>
+#include <Urho3D/Graphics/VertexBuffer.h>
+#include <Urho3D/Core/WorkQueue.h>
+#include <Urho3D/Resource/XMLFile.h>
+#include <Urho3D/Graphics/Zone.h>
 
-#include "Sort.h"
+#include <Urho3D/Container/Sort.h>
 
 #ifdef WIN32
 #include <windows.h>
@@ -60,7 +60,7 @@
 
 #include <cstring>
 
-#include "DebugNew.h"
+#include <Urho3D/DebugNew.h>
 
 using namespace Urho3D;
 
@@ -142,7 +142,7 @@ void BuildAndSaveAnimations(OutModel* model = 0);
 
 void ExportScene(const String& outName, bool asPrefab);
 void CollectSceneModels(OutScene& scene, aiNode* node);
-Node* CreateSceneNode(Scene* scene, aiNode* srcNode, HashMap<aiNode*, WeakPtr<Node> >& nodeMapping);
+Node* CreateSceneNode(Scene* scene, aiNode* srcNode, HashMap<aiNode*, Node*>& nodeMapping);
 void BuildAndSaveScene(OutScene& scene, bool asPrefab);
 
 void ExportMaterials(HashSet<String>& usedTextures);

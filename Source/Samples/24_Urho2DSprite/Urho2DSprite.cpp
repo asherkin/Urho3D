@@ -20,25 +20,26 @@
 // THE SOFTWARE.
 //
 
-#include "AnimatedSprite2D.h"
-#include "AnimationSet2D.h"
-#include "Camera.h"
-#include "CoreEvents.h"
-#include "Engine.h"
-#include "Font.h"
-#include "Graphics.h"
-#include "Input.h"
-#include "Octree.h"
-#include "Renderer.h"
-#include "ResourceCache.h"
-#include "Scene.h"
-#include "Sprite2D.h"
-#include "StaticSprite2D.h"
-#include "Text.h"
-#include "Urho2DSprite.h"
-#include "Zone.h"
+#include <Urho3D/Urho2D/AnimatedSprite2D.h>
+#include <Urho3D/Urho2D/AnimationSet2D.h>
+#include <Urho3D/Graphics/Camera.h>
+#include <Urho3D/Core/CoreEvents.h>
+#include <Urho3D/Engine/Engine.h>
+#include <Urho3D/UI/Font.h>
+#include <Urho3D/Graphics/Graphics.h>
+#include <Urho3D/Input/Input.h>
+#include <Urho3D/Graphics/Octree.h>
+#include <Urho3D/Graphics/Renderer.h>
+#include <Urho3D/Resource/ResourceCache.h>
+#include <Urho3D/Scene/Scene.h>
+#include <Urho3D/Urho2D/Sprite2D.h>
+#include <Urho3D/Urho2D/StaticSprite2D.h>
+#include <Urho3D/UI/Text.h>
+#include <Urho3D/Graphics/Zone.h>
 
-#include "DebugNew.h"
+#include "Urho2DSprite.h"
+
+#include <Urho3D/DebugNew.h>
 
 // Number of static sprites to draw
 static const unsigned NUM_SPRITES = 200;

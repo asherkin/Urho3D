@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "LogicComponent.h"
+#include <Urho3D/Scene/LogicComponent.h>
 
 using namespace Urho3D;
 

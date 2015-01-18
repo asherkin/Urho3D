@@ -20,19 +20,19 @@
 // THE SOFTWARE.
 //
 
-#include "ArrayPtr.h"
-#include "MathDefs.h"
-#include "ProcessUtils.h"
-#include "StringUtils.h"
+#include <Urho3D/Container/ArrayPtr.h>
+#include <Urho3D/Math/MathDefs.h>
+#include <Urho3D/Core/ProcessUtils.h>
+#include <Urho3D/Core/StringUtils.h>
 
 #ifdef WIN32
 #include <windows.h>
 #endif
 
-#include <stb_image.h>
-#include <stb_image_write.h>
+#include <STB/stb_image.h>
+#include <STB/stb_image_write.h>
 
-#include "DebugNew.h"
+#include <Urho3D/DebugNew.h>
 
 using namespace Urho3D;
 
