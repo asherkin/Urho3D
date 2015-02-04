@@ -112,7 +112,7 @@ public:
     /// Return a random point on the navigation mesh within a circle. The circle radius is only a guideline and in practice the returned point may be further away.
     Vector3 GetRandomPointInCircle(const Vector3& center, float radius, const Vector3& extents = Vector3::ONE);
     /// Return distance to wall from a point. Maximum search radius must be specified.
-    float GetDistanceToWall(const Vector3& point, float radius, const Vector3& extents = Vector3::ONE);
+    float GetDistanceToWall(const Vector3& point, float radius, const Vector3& extents = Vector3::ONE, Vector3* position = 0, Vector3* normal = 0);
     /// Perform a walkability raycast on the navigation mesh between start and end and return the point where a wall was hit, or the end point if no walls.
     Vector3 Raycast(const Vector3& start, const Vector3& end, const Vector3& extents = Vector3::ONE);
     /// Add debug geometry to the debug renderer.

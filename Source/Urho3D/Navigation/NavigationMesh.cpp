@@ -587,7 +587,7 @@ Vector3 NavigationMesh::GetRandomPointInCircle(const Vector3& center, float radi
     return transform * point;
 }
 
-float NavigationMesh::GetDistanceToWall(const Vector3& point, float radius, const Vector3& extents)
+float NavigationMesh::GetDistanceToWall(const Vector3& point, float radius, const Vector3& extents, Vector3* position, Vector3* normal)
 {
     if (!InitializeQuery())
         return radius;
@@ -606,6 +606,13 @@ float NavigationMesh::GetDistanceToWall(const Vector3& point, float radius, cons
     Vector3 hitNormal;
 
     navMeshQuery_->findDistanceToWall(startRef, &localPoint.x_, radius, queryFilter_, &hitDist, &hitPos.x_, &hitNormal.x_);
+
+    if (position)
+        *position = hitPos;
+
+    if (normal)
+        *normal = hitNormal;
+
     return hitDist;
 }
 
