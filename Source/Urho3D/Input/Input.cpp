@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2008-2014 the Urho3D project.
+// Copyright (c) 2008-2015 the Urho3D project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,6 @@
 // THE SOFTWARE.
 //
 
-#include "Precompiled.h"
 #include "../Core/Context.h"
 #include "../Core/CoreEvents.h"
 #include "../IO/FileSystem.h"
@@ -1725,6 +1724,14 @@ void Input::HandleScreenMode(StringHash eventType, VariantMap& eventData)
         lastMousePosition_ = center;
     }
 
+    // Resize screen joysticks to new screen size
+    for (HashMap<SDL_JoystickID, JoystickState>::Iterator i = joysticks_.Begin(); i != joysticks_.End(); ++i)
+    {
+        UIElement* screenjoystick = i->second_.screenJoystick_;
+        if (screenjoystick)
+            screenjoystick->SetSize(graphics_->GetWidth(), graphics_->GetHeight());
+    }
+    
     focusedThisFrame_ = true;
 
     // After setting a new screen mode we should not be minimized

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2008-2014 the Urho3D project.
+# Copyright (c) 2008-2015 the Urho3D project.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -85,7 +85,7 @@ task :cmake do
     end
   }
   build_tree = ENV["#{platform}_build_tree"] || ENV['build_tree'] || "../#{platform}-Build"
-  system "./#{script}#{ENV['OS'] ? '.bat' : '.sh'} #{build_tree} #{build_options}" or abort
+  system "./#{script}#{ENV['OS'] ? '.bat' : '.sh'} \"#{build_tree}\" #{build_options}" or abort
 end
 
 # Usage: rake make [<platform>] [<option>=<value> [<option>=<value>]] [[<platform>_]build_tree=/path/to/build-tree] [numjobs=8] [clean_first] [unfilter]
@@ -125,7 +125,7 @@ task :make do
     build_options = "#{numjobs}#{build_options}"
     filter = ''
   end
-  system "cd #{build_tree} && cmake --build . #{cmake_build_options} -- #{build_options} #{filter}" or abort
+  system "cd \"#{build_tree}\" && cmake --build . #{cmake_build_options} -- #{build_options} #{filter}" or abort
 end
 
 # Usage: rake android [parameter='--es pickedLibrary Urho3DPlayer'] [intent=.SampleLauncher] [package=com.github.urho3d] [success_indicator='Initialized engine'] [payload='sleep 30'] [api=19] [abi=armeabi-v7a] [avd=test_#{api}_#{abi}] [retries=10] [retry_interval=10]
@@ -162,7 +162,7 @@ task :ci do
     # Only 64-bit Linux environment with virtual framebuffer X server support and not MinGW build; or OSX build environment and not iOS build are capable to run tests
     $testing = (ENV['LINUX'] && !ENV['URHO3D_64BIT']) || (ENV['OSX'] && ENV['IOS'].to_i != 1) ? 1 : 0
     if $testing
-      ENV['URHO3D_PREFIX_PATH'] = `pwd`.chomp + '/Bin'
+      ENV['URHO3D_PREFIX_PATH'] = `pwd`.chomp + '/bin'
     end
   end
   # Define the build option string only when the override environment variable is given
@@ -369,9 +369,9 @@ endif ()
 EOF
   # TODO: Rewrite in pure Ruby when it supports symlink creation on Windows platform
   if ENV['OS']
-    system("@echo off && mkdir #{dir}\\Bin && copy Source\\Tools\\Urho3DPlayer\\Urho3DPlayer.* #{dir} >nul && (for %f in (*.bat Rakefile) do mklink #{dir}\\%f %cd%\\%f >nul) && mklink /D #{dir}\\CMake %cd%\\CMake && (for %d in (CoreData,Data) do mklink /D #{dir}\\Bin\\%d %cd%\\Bin\\%d >nul)") && File.write("#{dir}/CMakeLists.txt", build_script) or abort 'Failed to create new project using Urho3D as external library'
+    system("@echo off && mkdir '#{dir}'\\bin && copy Source\\Tools\\Urho3DPlayer\\Urho3DPlayer.* '#{dir}' >nul && (for %f in (*.bat Rakefile) do mklink '#{dir}'\\%f %cd%\\%f >nul) && mklink /D '#{dir}'\\CMake %cd%\\CMake && (for %d in (CoreData,Data) do mklink /D '#{dir}'\\bin\\%d %cd%\\bin\\%d >nul)") && File.write("#{dir}/CMakeLists.txt", build_script) or abort 'Failed to create new project using Urho3D as external library'
   else
-    system("bash -c \"mkdir -p #{dir}/Bin && cp Source/Tools/Urho3DPlayer/Urho3DPlayer.* #{dir} && for f in {.,}*.sh Rakefile CMake; do ln -sf `pwd`/\\$f #{dir}; done && ln -sf `pwd`/Bin/{Core,}Data #{dir}/Bin\"") && File.write("#{dir}/CMakeLists.txt", build_script) or abort 'Failed to create new project using Urho3D as external library'
+    system("bash -c \"mkdir -p '#{dir}'/bin && cp Source/Tools/Urho3DPlayer/Urho3DPlayer.* '#{dir}' && for f in {.,}*.sh Rakefile CMake; do ln -sf `pwd`/\\$f '#{dir}'; done && ln -sf `pwd`/bin/{Core,}Data '#{dir}'/bin\"") && File.write("#{dir}/CMakeLists.txt", build_script) or abort 'Failed to create new project using Urho3D as external library'
   end
 end
 

@@ -1,13 +1,13 @@
 # Output directories (in case of non out-of-source)
-/Bin/*
-!/Bin/**/
-!/Bin/*.bat
-!/Bin/*.sh
-/Bin/*.app/
-/Bin/*.app.dSYM/
-/Bin/jit/
-/Bin/Screenshots/
-/Bin/tool/
+/bin/*
+!/bin/**/
+!/bin/*.bat
+!/bin/*.sh
+/bin/*.app/
+/bin/*.app.dSYM/
+/bin/jit/
+/bin/Screenshots/
+/bin/tool/
 /include/
 /lib*/
 generated/
@@ -57,8 +57,10 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 
-# GCC PCH files
-*.gch
+# Precompiled header files (in case of non out-of-source)
+*.gch/
+*.pch/
+*.pch.*
 
 # Misc.
 configure*

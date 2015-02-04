@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2008-2014 the Urho3D project.
+// Copyright (c) 2008-2015 the Urho3D project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,6 @@
 // THE SOFTWARE.
 //
 
-#include "Precompiled.h"
 #include "../Audio/Audio.h"
 #include "../Engine/Console.h"
 #include "../Core/Context.h"
@@ -199,12 +198,11 @@ bool Engine::Initialize(const VariantMap& parameters)
     ResourceCache* cache = GetSubsystem<ResourceCache>();
     FileSystem* fileSystem = GetSubsystem<FileSystem>();
 
-    String defaultPrefixPath(AddTrailingSlash(getenv("URHO3D_PREFIX_PATH")));
-    if (defaultPrefixPath.Empty())
-        defaultPrefixPath = fileSystem->GetProgramDir();
-    else if (!IsAbsolutePath(defaultPrefixPath))
-        defaultPrefixPath = fileSystem->GetProgramDir() + defaultPrefixPath;
-    String resourcePrefixPath = AddTrailingSlash(GetParameter(parameters, "ResourcePrefixPath", defaultPrefixPath).GetString());
+    String resourcePrefixPath = AddTrailingSlash(GetParameter(parameters, "ResourcePrefixPath", getenv("URHO3D_PREFIX_PATH")).GetString());
+    if (resourcePrefixPath.Empty())
+        resourcePrefixPath = fileSystem->GetProgramDir();
+    else if (!IsAbsolutePath(resourcePrefixPath))
+        resourcePrefixPath = fileSystem->GetProgramDir() + resourcePrefixPath;
     Vector<String> resourcePaths = GetParameter(parameters, "ResourcePaths", "Data;CoreData").GetString().Split(';');
     Vector<String> resourcePackages = GetParameter(parameters, "ResourcePackages").GetString().Split(';');
     Vector<String> autoLoadPaths = GetParameter(parameters, "AutoloadPaths", "Autoload").GetString().Split(';');

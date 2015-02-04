@@ -67,24 +67,28 @@ namespace Urho3D
 ### EndRendering
 
 ### BeginViewUpdate
+- %View : View pointer
 - %Texture : Texture pointer
 - %Surface : RenderSurface pointer
 - %Scene : Scene pointer
 - %Camera : Camera pointer
 
 ### EndViewUpdate
+- %View : View pointer
 - %Texture : Texture pointer
 - %Surface : RenderSurface pointer
 - %Scene : Scene pointer
 - %Camera : Camera pointer
 
 ### BeginViewRender
+- %View : View pointer
 - %Texture : Texture pointer
 - %Surface : RenderSurface pointer
 - %Scene : Scene pointer
 - %Camera : Camera pointer
 
 ### EndViewRender
+- %View : View pointer
 - %Texture : Texture pointer
 - %Surface : RenderSurface pointer
 - %Scene : Scene pointer
@@ -2401,6 +2405,7 @@ Methods:
 
 Properties:
 
+- float alpha
 - String animation
 - bool animationEnabled
 - AnimationSet2D@ animationSet
@@ -2418,6 +2423,7 @@ Properties:
 - bool enabledEffective // readonly
 - bool flipX
 - bool flipY
+- Vector2 hotSpot
 - uint id // readonly
 - bool inView // readonly
 - int layer
@@ -2440,6 +2446,7 @@ Properties:
 - Texture2D@ texture
 - StringHash type // readonly
 - String typeName // readonly
+- bool useHotSpot
 - uint viewMask
 - int weakRefs // readonly
 - BoundingBox worldBoundingBox // readonly
@@ -3785,7 +3792,7 @@ Methods:
 - void SetCylinder(float, float, const Vector3& = Vector3 ( ), const Quaternion& = Quaternion ( ))
 - void SetSphere(float, const Vector3& = Vector3 ( ), const Quaternion& = Quaternion ( ))
 - void SetStaticPlane(const Vector3& = Vector3 ( ), const Quaternion& = Quaternion ( ))
-- void SetTerrain()
+- void SetTerrain(uint = 0)
 - void SetTransform(const Vector3&, const Quaternion&)
 - void SetTriangleMesh(Model@, uint = 0, const Vector3& = Vector3 ( 1 , 1 , 1 ), const Vector3& = Vector3 ( ), const Quaternion& = Quaternion ( ))
 
@@ -7555,10 +7562,10 @@ Methods:
 - float GetAttributeAnimationSpeed(const String&) const
 - WrapMode GetAttributeAnimationWrapMode(const String&) const
 - Variant GetAttributeDefault(const String&) const
-- Node@[]@ GetDrawables(const BoundingBox&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK)
-- Node@[]@ GetDrawables(const Frustum&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK)
-- Node@[]@ GetDrawables(const Sphere&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK)
-- Node@[]@ GetDrawables(const Vector3&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK)
+- Drawable@[]@ GetDrawables(const BoundingBox&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK)
+- Drawable@[]@ GetDrawables(const Frustum&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK)
+- Drawable@[]@ GetDrawables(const Sphere&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK)
+- Drawable@[]@ GetDrawables(const Vector3&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK)
 - bool Load(File@, bool = false)
 - bool Load(VectorBuffer&, bool = false)
 - bool LoadXML(const XMLElement&, bool = false)
@@ -8883,9 +8890,8 @@ Properties:
 Methods:
 
 - void ClearDelayedExecute(const String& = String ( ))
-- void DelayedExecute(float, bool, const String&)
-- void DelayedExecute(float, bool, const String&, const Variant[]@)
-- bool Execute(const String&, const Variant[]@)
+- void DelayedExecute(float, bool, const String&, const Variant[]@ = null)
+- bool Execute(const String&, const Variant[]@ = null)
 - bool Load(File@)
 - bool Load(VectorBuffer&)
 - bool Save(File@) const
@@ -8914,11 +8920,9 @@ Methods:
 - void ApplyAttributes()
 - void ClearDelayedExecute(const String& = String ( ))
 - bool CreateObject(ScriptFile@, const String&)
-- void DelayedExecute(float, bool, const String&)
-- void DelayedExecute(float, bool, const String&, const Variant[]@)
+- void DelayedExecute(float, bool, const String&, const Variant[]@ = null)
 - void DrawDebugGeometry(DebugRenderer@, bool)
-- bool Execute(const String&)
-- bool Execute(const String&, const Variant[]@)
+- bool Execute(const String&, const Variant[]@ = null)
 - Variant GetAttribute(const String&) const
 - ValueAnimation@ GetAttributeAnimation(const String&) const
 - float GetAttributeAnimationSpeed(const String&) const
@@ -10340,6 +10344,7 @@ Methods:
 
 Properties:
 
+- float alpha
 - bool animationEnabled
 - Variant[] attributeDefaults // readonly
 - AttributeInfo[] attributeInfos // readonly
@@ -10355,6 +10360,7 @@ Properties:
 - bool enabledEffective // readonly
 - bool flipX
 - bool flipY
+- Vector2 hotSpot
 - uint id // readonly
 - bool inView // readonly
 - int layer
@@ -10375,6 +10381,7 @@ Properties:
 - Texture2D@ texture
 - StringHash type // readonly
 - String typeName // readonly
+- bool useHotSpot
 - uint viewMask
 - int weakRefs // readonly
 - BoundingBox worldBoundingBox // readonly
@@ -12955,8 +12962,7 @@ Properties:
 - float Cos(float)
 - uint CountSetBits(uint)
 - VectorBuffer DecompressVectorBuffer(VectorBuffer&)
-- void DelayedExecute(float, bool, const String&)
-- void DelayedExecute(float, bool, const String&, const Variant[]@)
+- void DelayedExecute(float, bool, const String&, const Variant[]@ = null)
 - bool Equals(float, float)
 - void ErrorDialog(const String&, const String&)
 - float Floor(float)

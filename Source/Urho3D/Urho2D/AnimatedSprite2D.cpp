@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2008-2014 the Urho3D project.
+// Copyright (c) 2008-2015 the Urho3D project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,6 @@
 // THE SOFTWARE.
 //
 
-#include "Precompiled.h"
 #include "../Urho2D/AnimatedSprite2D.h"
 #include "../Urho2D/Animation2D.h"
 #include "../Urho2D/AnimationSet2D.h"
@@ -358,16 +357,16 @@ void AnimatedSprite2D::UpdateAnimation(float timeStep)
     currentTime_ += timeStep * speed_;
 
     float time;
-    float animtationLength = animation_->GetLength();
+    float animationLength = animation_->GetLength();
 
     if (looped_)
     {
-        time = fmodf(currentTime_, animtationLength);
+        time = fmodf(currentTime_, animationLength);
         if (time < 0.0f)
             time += animation_->GetLength();
     }
     else
-        time = Clamp(currentTime_, 0.0f, animtationLength);
+        time = Clamp(currentTime_, 0.0f, animationLength);
 
     for (unsigned i = 0; i < numTracks_; ++i)
     {
@@ -459,14 +458,13 @@ void AnimatedSprite2D::UpdateAnimation(float timeStep)
                 {
                     staticSprite->SetOrderInLayer(orderInLayer_ + nodeInfo.value.zIndex_);
                     staticSprite->SetSprite(nodeInfo.value.sprite_);
+                    staticSprite->SetAlpha(nodeInfo.value.alpha_);
                     staticSprite->SetUseHotSpot(nodeInfo.value.useHotSpot_);
                     staticSprite->SetHotSpot(nodeInfo.value.hotSpot_);
                 }
             }
         }
     }
-
-    MarkForUpdate();
 }
 
 void AnimatedSprite2D::CalculateTimelineWorldTransform(unsigned index)

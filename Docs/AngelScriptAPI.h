@@ -199,6 +199,7 @@ void SetAttributeAnimationWrapMode(const String&, WrapMode);
 void SetFlip(bool, bool);
 
 // Properties:
+float alpha;
 String animation;
 bool animationEnabled;
 AnimationSet2D animationSet;
@@ -222,6 +223,7 @@ bool enabled;
 bool enabledEffective;
 bool flipX;
 bool flipY;
+Vector2 hotSpot;
 /* readonly */
 uint id;
 /* readonly */
@@ -251,6 +253,7 @@ Texture2D texture;
 StringHash type;
 /* readonly */
 String typeName;
+bool useHotSpot;
 uint viewMask;
 /* readonly */
 int weakRefs;
@@ -1795,7 +1798,7 @@ void SetCustomTriangleMesh(CustomGeometry, const Vector3& = Vector3 ( 1 , 1 , 1 
 void SetCylinder(float, float, const Vector3& = Vector3 ( ), const Quaternion& = Quaternion ( ));
 void SetSphere(float, const Vector3& = Vector3 ( ), const Quaternion& = Quaternion ( ));
 void SetStaticPlane(const Vector3& = Vector3 ( ), const Quaternion& = Quaternion ( ));
-void SetTerrain();
+void SetTerrain(uint = 0);
 void SetTransform(const Vector3&, const Quaternion&);
 void SetTriangleMesh(Model, uint = 0, const Vector3& = Vector3 ( 1 , 1 , 1 ), const Vector3& = Vector3 ( ), const Quaternion& = Quaternion ( ));
 
@@ -6192,10 +6195,10 @@ ValueAnimation GetAttributeAnimation(const String&) const;
 float GetAttributeAnimationSpeed(const String&) const;
 WrapMode GetAttributeAnimationWrapMode(const String&) const;
 Variant GetAttributeDefault(const String&) const;
-Array<Node> GetDrawables(const BoundingBox&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK);
-Array<Node> GetDrawables(const Frustum&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK);
-Array<Node> GetDrawables(const Sphere&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK);
-Array<Node> GetDrawables(const Vector3&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK);
+Array<Drawable> GetDrawables(const BoundingBox&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK);
+Array<Drawable> GetDrawables(const Frustum&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK);
+Array<Drawable> GetDrawables(const Sphere&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK);
+Array<Drawable> GetDrawables(const Vector3&, uint8 = DRAWABLE_ANY, uint = DEFAULT_VIEWMASK);
 bool Load(File, bool = false);
 bool Load(VectorBuffer&, bool = false);
 bool LoadXML(const XMLElement&, bool = false);
@@ -7677,9 +7680,8 @@ class ScriptFile
 {
 // Methods:
 void ClearDelayedExecute(const String& = String ( ));
-void DelayedExecute(float, bool, const String&);
-void DelayedExecute(float, bool, const String&, const Array<Variant>);
-bool Execute(const String&, const Array<Variant>);
+void DelayedExecute(float, bool, const String&, const Array<Variant> = null);
+bool Execute(const String&, const Array<Variant> = null);
 bool Load(File);
 bool Load(VectorBuffer&);
 bool Save(File) const;
@@ -7714,11 +7716,9 @@ class ScriptInstance
 void ApplyAttributes();
 void ClearDelayedExecute(const String& = String ( ));
 bool CreateObject(ScriptFile, const String&);
-void DelayedExecute(float, bool, const String&);
-void DelayedExecute(float, bool, const String&, const Array<Variant>);
+void DelayedExecute(float, bool, const String&, const Array<Variant> = null);
 void DrawDebugGeometry(DebugRenderer, bool);
-bool Execute(const String&);
-bool Execute(const String&, const Array<Variant>);
+bool Execute(const String&, const Array<Variant> = null);
 Variant GetAttribute(const String&) const;
 ValueAnimation GetAttributeAnimation(const String&) const;
 float GetAttributeAnimationSpeed(const String&) const;
@@ -9369,6 +9369,7 @@ void SetAttributeAnimationWrapMode(const String&, WrapMode);
 void SetFlip(bool, bool);
 
 // Properties:
+float alpha;
 bool animationEnabled;
 /* readonly */
 Array<Variant> attributeDefaults;
@@ -9390,6 +9391,7 @@ bool enabled;
 bool enabledEffective;
 bool flipX;
 bool flipY;
+Vector2 hotSpot;
 /* readonly */
 uint id;
 /* readonly */
@@ -9417,6 +9419,7 @@ Texture2D texture;
 StringHash type;
 /* readonly */
 String typeName;
+bool useHotSpot;
 uint viewMask;
 /* readonly */
 int weakRefs;
@@ -12335,8 +12338,7 @@ VectorBuffer CompressVectorBuffer(VectorBuffer&);
 float Cos(float);
 uint CountSetBits(uint);
 VectorBuffer DecompressVectorBuffer(VectorBuffer&);
-void DelayedExecute(float, bool, const String&);
-void DelayedExecute(float, bool, const String&, const Array<Variant>);
+void DelayedExecute(float, bool, const String&, const Array<Variant> = null);
 bool Equals(float, float);
 void ErrorDialog(const String&, const String&);
 float Floor(float);

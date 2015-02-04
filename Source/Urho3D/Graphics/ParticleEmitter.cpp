@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2008-2014 the Urho3D project.
+// Copyright (c) 2008-2015 the Urho3D project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,6 @@
 // THE SOFTWARE.
 //
 
-#include "Precompiled.h"
 #include "../Core/Context.h"
 #include "../Graphics/ParticleEffect.h"
 #include "../Graphics/ParticleEmitter.h"
@@ -206,6 +205,8 @@ void ParticleEmitter::Update(const FrameInfo& frame)
             if (sizeAdd != 0.0f || sizeMul != 1.0f)
             {
                 particle.scale_ += lastTimeStep_ * sizeAdd;
+                if (particle.scale_ < 0.0f)
+                    particle.scale_ = 0.0f;
                 if (sizeMul != 1.0f)
                     particle.scale_ *= (lastTimeStep_ * (sizeMul - 1.0f)) + 1.0f;
                 billboard.size_ = particle.size_ * particle.scale_;

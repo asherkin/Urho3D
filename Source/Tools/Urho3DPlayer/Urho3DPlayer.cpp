@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2008-2014 the Urho3D project.
+// Copyright (c) 2008-2015 the Urho3D project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,6 +19,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
+
+#include <Urho3D/Urho3D.h>
 
 #include <Urho3D/Engine/Engine.h>
 #include <Urho3D/IO/FileSystem.h>
@@ -52,28 +54,25 @@ void Urho3DPlayer::Setup()
 {
     FileSystem* filesystem = GetSubsystem<FileSystem>();
 
-    // On Android and iOS, read command line from a file as parameters can not otherwise be easily given
-    #if defined(ANDROID) || defined(IOS)
-    SharedPtr<File> commandFile(new File(context_, filesystem->GetProgramDir() + "Data/CommandLine.txt",
-        FILE_READ));
-    String commandLine = commandFile->ReadLine();
-    commandFile->Close();
-    ParseArguments(commandLine, false);
-    // Reparse engine startup parameters now
-    engineParameters_ = Engine::ParseParameters(GetArguments());
-    #endif
+    // Read command line from a file if no arguments given. This is primarily intended for mobile platforms.
+    // Note that the command file name uses a hardcoded path that does not utilize the resource system
+    // properly (including resource path prefix), as the resource system is not yet initialized at this point
+    const String commandFileName = filesystem->GetProgramDir() + "Data/CommandLine.txt";
+    if (GetArguments().Empty() && filesystem->FileExists(commandFileName))
+    {
+        SharedPtr<File> commandFile(new File(context_, commandFileName));
+        String commandLine = commandFile->ReadLine();
+        commandFile->Close();
+        ParseArguments(commandLine, false);
+        // Reparse engine startup parameters now
+        engineParameters_ = Engine::ParseParameters(GetArguments());
+    }
 
     // Check for script file name
     const Vector<String>& arguments = GetArguments();
     String scriptFileName;
-    for (unsigned i = 0; i < arguments.Size(); ++i)
-    {
-        if (arguments[i][0] != '-')
-        {
-            scriptFileName_ = GetInternalPath(arguments[i]);
-            break;
-        }
-    }
+    if (arguments.Size() && arguments[0][0] != '-')
+        scriptFileName_ = GetInternalPath(arguments[0]);
 
     // Show usage if not found
     if (scriptFileName_.Empty())

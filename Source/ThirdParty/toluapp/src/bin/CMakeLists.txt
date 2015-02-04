@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2008-2014 the Urho3D project.
+# Copyright (c) 2008-2015 the Urho3D project.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -67,8 +67,8 @@ if (NOT MSVC)
 endif ()
 set (INCLUDE_DIRS ../../include ../../../../ThirdParty/Lua${JIT}/src)
 
-# All tools must be natively built and output to Bin/tool subdir to differentiate them from platform-specific binaries in the Bin directory
-set_output_directories (${CMAKE_BINARY_DIR}/Bin/tool RUNTIME PDB)
+# All tools must be natively built and output to bin/tool subdir to differentiate them from platform-specific binaries in the bin directory
+set_output_directories (${CMAKE_BINARY_DIR}/bin/tool RUNTIME PDB)
 
 # Setup target
 if (URHO3D_LUAJIT AND URHO3D_64BIT AND APPLE AND NOT IOS)

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2008-2014 the Urho3D project.
+# Copyright (c) 2008-2015 the Urho3D project.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -32,8 +32,8 @@ add_subdirectory (Urho3DPlayer)
 
 # Do not build tools for iOS and Android regardless of the URHO3D_TOOLS build option
 if (NOT IOS AND NOT ANDROID AND URHO3D_TOOLS)
-    # All tools must be natively built and output to Bin/tool subdir to differentiate them from platform-specific binaries in the Bin directory
-    set_output_directories (${CMAKE_BINARY_DIR}/Bin/tool RUNTIME PDB)
+    # All tools must be natively built and output to bin/tool subdir to differentiate them from platform-specific binaries in the bin directory
+    set_output_directories (${CMAKE_BINARY_DIR}/bin/tool RUNTIME PDB)
     # Urho3D tools
     add_subdirectory (AssetImporter)
     add_subdirectory (OgreImporter)

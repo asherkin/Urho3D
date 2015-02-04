@@ -937,7 +937,7 @@ Methods:
 - void SetCustomConvexHull(CustomGeometry* custom, const Vector3& scale)
 - void SetCustomConvexHull(CustomGeometry* custom, const Vector3& scale, const Vector3& position)
 - void SetCustomConvexHull(CustomGeometry* custom, const Vector3& scale, const Vector3& position, const Quaternion& rotation)
-- void SetTerrain()
+- void SetTerrain(unsigned lodLevel = 0)
 - void SetShapeType(ShapeType type)
 - void SetSize(const Vector3& size)
 - void SetPosition(const Vector3& position)
@@ -2842,11 +2842,14 @@ Methods:
 - void SetScriptFile(LuaFile* scriptFile)
 - void SetScriptObjectType(const String scriptObjectType)
 - void SubscribeToEvent(const String eventName, void* functionOrFunctionName)
-- void UnsubscribeFromEvent(const String eventName)
-- void UnsubscribeFromAllEvents()
 - void SubscribeToEvent(void* sender, const String eventName, void* functionOrFunctionName)
-- void UnsubscribeFromEvent(void* sender, const String eventName)
-- void UnsubscribeFromEvents(void* sender)
+- void UnsubscribeFromEvent(const String eventName, void* functionOrFunctionName)
+- void UnsubscribeFromEvent(const String eventName)
+- void UnsubscribeFromEvent(Object* sender, const String eventName, void* functionOrFunctionName)
+- void UnsubscribeFromEvent(Object* sender, const String eventName)
+- void UnsubscribeFromEvents(Object* sender)
+- void UnsubscribeFromAllEvents()
+- void UnsubscribeFromAllEventsExcept(const Vector<String>& exceptionNames)
 - LuaFile* GetScriptFile() const
 - const String GetScriptObjectType() const
 
@@ -5219,10 +5222,16 @@ Methods:
 - void SetFlipX(bool flipX)
 - void SetFlipY(bool flipY)
 - void SetColor(const Color& color)
+- void SetAlpha(float alpha)
+- void SetUseHotSpot(bool useHotSpot)
+- void SetHotSpot(const Vector2& hotspot)
 - Sprite2D* GetSprite() const
 - bool GetFlipX() const
 - bool GetFlipY() const
 - const Color& GetColor() const
+- float GetAlpha() const
+- bool GetUseHotSpot() const
+- const Vector2& GetHotSpot() const
 
 Properties:
 
@@ -5230,6 +5239,9 @@ Properties:
 - bool flipX
 - bool flipY
 - Color& color
+- float alpha
+- bool useHotSpot
+- Vector2 hotSpot
 
 <a name="Class_StringHash"></a>
 ### StringHash
@@ -5624,6 +5636,7 @@ Properties:
 
 Methods:
 
+- void DrawDebugGeometry(DebugRenderer* debug, bool depthTest)
 - void SetTmxFile(TmxFile2D* tmxFile)
 - TmxFile2D* GetTmxFile() const
 - const TileMapInfo2D& GetInfo() const
@@ -5662,6 +5675,7 @@ Properties:
 
 Methods:
 
+- void DrawDebugGeometry(DebugRenderer* debug, bool depthTest)
 - void SetDrawOrder(int drawOrder)
 - void SetVisible(bool visible)
 - int GetDrawOrder() const
@@ -7299,11 +7313,11 @@ Properties:
 - void PrintLine(const String str, bool error = false)
 - int Rand()
 - float RandStandardNormal()
+- float Random(float range)
 - float Random()
 - float Random(float min, float max)
-- float Random(float range)
-- int RandomInt(int min, int max)
 - int RandomInt(int range)
+- int RandomInt(int min, int max)
 - float RandomNormal(float meanValue, float variance)
 - String RemoveTrailingSlash(const String pathName)
 - String ReplaceExtension(const String fullPath, const String newExtension)
@@ -7337,10 +7351,12 @@ Properties:
 - Vector3 ToVector3(const String source)
 - Vector4 ToVector4(const String source, bool allowMissingCoords = false)
 - void UnsubscribeFromAllEvents()
-- void UnsubscribeFromEvent(void* sender, const String eventName, void* functionOrFunctionName)
+- void UnsubscribeFromAllEventsExcept(const Vector<String>& exceptionNames)
 - void UnsubscribeFromEvent(const String eventName)
+- void UnsubscribeFromEvent(Object* sender, const String eventName, void* functionOrFunctionName)
 - void UnsubscribeFromEvent(const String eventName, void* functionOrFunctionName)
-- void UnsubscribeFromEvents(void* sender)
+- void UnsubscribeFromEvent(Object* sender, const String eventName)
+- void UnsubscribeFromEvents(Object* sender)
 
 
 \section LuaScriptAPI_GlobalProperties Global properties

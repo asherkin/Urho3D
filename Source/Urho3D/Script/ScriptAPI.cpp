@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2008-2014 the Urho3D project.
+// Copyright (c) 2008-2015 the Urho3D project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,6 @@
 // THE SOFTWARE.
 //
 
-#include "Precompiled.h"
 #include "../Script/APITemplates.h"
 #include "../Resource/ResourceCache.h"
 #include "../Script/ScriptAPI.h"
@@ -31,36 +30,30 @@ namespace Urho3D
 
 static bool ScriptFileExecute(const String& declaration, CScriptArray* srcParams, ScriptFile* ptr)
 {
-    if (!srcParams)
-        return false;
+    VariantVector destParams(srcParams ? srcParams->GetSize() : 0);
 
-    unsigned numParams = srcParams->GetSize();
-    VariantVector destParams(numParams);
-
-    for (unsigned i = 0; i < numParams; ++i)
-        destParams[i] = *(static_cast<Variant*>(srcParams->At(i)));
+    if (srcParams)
+    {
+        unsigned numParams = srcParams->GetSize();
+        for (unsigned i = 0; i < numParams; ++i)
+            destParams[i] = *(static_cast<Variant*>(srcParams->At(i)));
+    }
 
     return ptr->Execute(declaration, destParams);
 }
 
 static void ScriptFileDelayedExecute(float delay, bool repeat, const String& declaration, CScriptArray* srcParams, ScriptFile* ptr)
 {
-    if (!srcParams)
-        return;
+    VariantVector destParams(srcParams ? srcParams->GetSize() : 0);
 
-    unsigned numParams = srcParams->GetSize();
-    VariantVector destParams;
-    destParams.Resize(numParams);
-
-    for (unsigned i = 0; i < numParams; ++i)
-        destParams[i] = *(static_cast<Variant*>(srcParams->At(i)));
+    if (srcParams)
+    {
+        unsigned numParams = srcParams->GetSize();
+        for (unsigned i = 0; i < numParams; ++i)
+            destParams[i] = *(static_cast<Variant*>(srcParams->At(i)));
+    }
 
     ptr->DelayedExecute(delay, repeat, declaration, destParams);
-}
-
-static void ScriptFileDelayedExecuteNoParams(float delay, bool repeat, const String& declaration, ScriptFile* ptr)
-{
-    ptr->DelayedExecute(delay, repeat, declaration);
 }
 
 static asIScriptObject* NodeCreateScriptObjectWithFile(ScriptFile* file, const String& className, CreateMode mode, Node* ptr)
@@ -92,9 +85,8 @@ static asIScriptObject* NodeCreateScriptObjectWithFile(ScriptFile* file, const S
 static void RegisterScriptFile(asIScriptEngine* engine)
 {
     RegisterResource<ScriptFile>(engine, "ScriptFile");
-    engine->RegisterObjectMethod("ScriptFile", "bool Execute(const String&in, const Array<Variant>@+)", asFUNCTION(ScriptFileExecute), asCALL_CDECL_OBJLAST);
-    engine->RegisterObjectMethod("ScriptFile", "void DelayedExecute(float, bool, const String&in, const Array<Variant>@+)", asFUNCTION(ScriptFileDelayedExecute), asCALL_CDECL_OBJLAST);
-    engine->RegisterObjectMethod("ScriptFile", "void DelayedExecute(float, bool, const String&in)", asFUNCTION(ScriptFileDelayedExecuteNoParams), asCALL_CDECL_OBJLAST);
+    engine->RegisterObjectMethod("ScriptFile", "bool Execute(const String&in, const Array<Variant>@+ params = null)", asFUNCTION(ScriptFileExecute), asCALL_CDECL_OBJLAST);
+    engine->RegisterObjectMethod("ScriptFile", "void DelayedExecute(float, bool, const String&in, const Array<Variant>@+ params = null)", asFUNCTION(ScriptFileDelayedExecute), asCALL_CDECL_OBJLAST);
     engine->RegisterObjectMethod("ScriptFile", "void ClearDelayedExecute(const String&in declaration = String())", asMETHOD(ScriptFile, ClearDelayedExecute), asCALL_THISCALL);
     engine->RegisterObjectMethod("ScriptFile", "bool get_compiled() const", asMETHOD(ScriptFile, IsCompiled), asCALL_THISCALL);
     engine->RegisterGlobalFunction("ScriptFile@+ get_scriptFile()", asFUNCTION(GetScriptContextFile), asCALL_CDECL);
@@ -146,42 +138,30 @@ asIScriptObject* NodeGetNamedScriptObject(const String& className, Node* ptr)
 
 static bool ScriptInstanceExecute(const String& declaration, CScriptArray* srcParams, ScriptInstance* ptr)
 {
-    if (!srcParams)
-        return false;
+    VariantVector destParams(srcParams ? srcParams->GetSize() : 0);
 
-    unsigned numParams = srcParams->GetSize();
-    VariantVector destParams;
-    destParams.Resize(numParams);
-
-    for (unsigned i = 0; i < numParams; ++i)
-        destParams[i] = *(static_cast<Variant*>(srcParams->At(i)));
+    if (srcParams)
+    {
+        unsigned numParams = srcParams->GetSize();
+        for (unsigned i = 0; i < numParams; ++i)
+            destParams[i] = *(static_cast<Variant*>(srcParams->At(i)));
+    }
 
     return ptr->Execute(declaration, destParams);
 }
 
-static bool ScriptInstanceExecuteNoParams(const String& declaration, ScriptInstance* ptr)
-{
-    return ptr->Execute(declaration);
-}
-
 static void ScriptInstanceDelayedExecute(float delay, bool repeat, const String& declaration, CScriptArray* srcParams, ScriptInstance* ptr)
 {
-    if (!srcParams)
-        return;
+    VariantVector destParams(srcParams ? srcParams->GetSize() : 0);
 
-    unsigned numParams = srcParams->GetSize();
-    VariantVector destParams;
-    destParams.Resize(numParams);
-
-    for (unsigned i = 0; i < numParams; ++i)
-        destParams[i] = *(static_cast<Variant*>(srcParams->At(i)));
+    if (srcParams)
+    {
+        unsigned numParams = srcParams->GetSize();
+        for (unsigned i = 0; i < numParams; ++i)
+            destParams[i] = *(static_cast<Variant*>(srcParams->At(i)));
+    }
 
     ptr->DelayedExecute(delay, repeat, declaration, destParams);
-}
-
-static void ScriptInstanceDelayedExecuteNoParams(float delay, bool repeat, const String& declaration, ScriptInstance* ptr)
-{
-    ptr->DelayedExecute(delay, repeat, declaration);
 }
 
 static ScriptInstance* GetSelf()
@@ -191,15 +171,14 @@ static ScriptInstance* GetSelf()
 
 static void SelfDelayedExecute(float delay, bool repeat, const String& declaration, CScriptArray* srcParams)
 {
-    if (!srcParams)
-        return;
-    
-    unsigned numParams = srcParams->GetSize();
-    VariantVector destParams;
-    destParams.Resize(numParams);
+    VariantVector destParams(srcParams ? srcParams->GetSize() : 0);
 
-    for (unsigned i = 0; i < numParams; ++i)
-        destParams[i] = *(static_cast<Variant*>(srcParams->At(i)));
+    if (srcParams)
+    {
+        unsigned numParams = srcParams->GetSize();
+        for (unsigned i = 0; i < numParams; ++i)
+            destParams[i] = *(static_cast<Variant*>(srcParams->At(i)));
+    }
 
     ScriptInstance* ptr = GetScriptContextInstance();
     if (ptr)
@@ -209,19 +188,6 @@ static void SelfDelayedExecute(float delay, bool repeat, const String& declarati
         ScriptFile* file = GetScriptContextFile();
         if (file)
             file->DelayedExecute(delay, repeat, declaration, destParams);
-    }
-}
-
-static void SelfDelayedExecuteNoParams(float delay, bool repeat, const String& declaration)
-{
-    ScriptInstance* ptr = GetScriptContextInstance();
-    if (ptr)
-        ptr->DelayedExecute(delay, repeat, declaration);
-    else
-    {
-        ScriptFile* file = GetScriptContextFile();
-        if (file)
-            file->DelayedExecute(delay, repeat, declaration);
     }
 }
 
@@ -268,10 +234,8 @@ static void RegisterScriptInstance(asIScriptEngine* engine)
 
     RegisterComponent<ScriptInstance>(engine, "ScriptInstance");
     engine->RegisterObjectMethod("ScriptInstance", "bool CreateObject(ScriptFile@+, const String&in)", asMETHODPR(ScriptInstance, CreateObject, (ScriptFile*, const String&), bool), asCALL_THISCALL);
-    engine->RegisterObjectMethod("ScriptInstance", "bool Execute(const String&in, const Array<Variant>@+)", asFUNCTION(ScriptInstanceExecute), asCALL_CDECL_OBJLAST);
-    engine->RegisterObjectMethod("ScriptInstance", "bool Execute(const String&in)", asFUNCTION(ScriptInstanceExecuteNoParams), asCALL_CDECL_OBJLAST);
-    engine->RegisterObjectMethod("ScriptInstance", "void DelayedExecute(float, bool, const String&in, const Array<Variant>@+)", asFUNCTION(ScriptInstanceDelayedExecute), asCALL_CDECL_OBJLAST);
-    engine->RegisterObjectMethod("ScriptInstance", "void DelayedExecute(float, bool, const String&in)", asFUNCTION(ScriptInstanceDelayedExecuteNoParams), asCALL_CDECL_OBJLAST);
+    engine->RegisterObjectMethod("ScriptInstance", "bool Execute(const String&in, const Array<Variant>@+ params = null)", asFUNCTION(ScriptInstanceExecute), asCALL_CDECL_OBJLAST);
+    engine->RegisterObjectMethod("ScriptInstance", "void DelayedExecute(float, bool, const String&in, const Array<Variant>@+ params = null)", asFUNCTION(ScriptInstanceDelayedExecute), asCALL_CDECL_OBJLAST);
     engine->RegisterObjectMethod("ScriptInstance", "void ClearDelayedExecute(const String&in declaration = String())", asMETHOD(ScriptInstance, ClearDelayedExecute), asCALL_THISCALL);
     engine->RegisterObjectMethod("ScriptInstance", "void set_scriptFile(ScriptFile@+)", asMETHOD(ScriptInstance, SetScriptFile), asCALL_THISCALL);
     engine->RegisterObjectMethod("ScriptInstance", "ScriptFile@+ get_scriptFile() const", asMETHOD(ScriptInstance, GetScriptFile), asCALL_THISCALL);
@@ -282,8 +246,7 @@ static void RegisterScriptInstance(asIScriptEngine* engine)
 
     // Register convenience functions for controlling self, similar to event sending
     engine->RegisterGlobalFunction("void MarkNetworkUpdate()", asFUNCTION(SelfMarkNetworkUpdate), asCALL_CDECL);
-    engine->RegisterGlobalFunction("void DelayedExecute(float, bool, const String&in, const Array<Variant>@+)", asFUNCTION(SelfDelayedExecute), asCALL_CDECL);
-    engine->RegisterGlobalFunction("void DelayedExecute(float, bool, const String&in)", asFUNCTION(SelfDelayedExecuteNoParams), asCALL_CDECL);
+    engine->RegisterGlobalFunction("void DelayedExecute(float, bool, const String&in, const Array<Variant>@+ params = null)", asFUNCTION(SelfDelayedExecute), asCALL_CDECL);
     engine->RegisterGlobalFunction("void ClearDelayedExecute(const String&in declaration = String())", asFUNCTION(SelfClearDelayedExecute), asCALL_CDECL);
     engine->RegisterGlobalFunction("void Remove()", asFUNCTION(SelfRemove), asCALL_CDECL);
 }
