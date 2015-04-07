@@ -40,15 +40,17 @@
 #include <cstring>
 
 #include <SDL/SDL.h>
+#ifdef EMSCRIPTEN
+#include <emscripten/html5.h>
+#endif
 
 #include "../DebugNew.h"
 
 extern "C" int SDL_AddTouch(SDL_TouchID touchID, const char *name);
 
-// Require a click inside window before re-hiding mouse cursor on OSX, otherwise dragging the window
-// can be incorrectly interpreted as mouse movement inside the window
-#if defined(__APPLE__) && !defined(IOS)
-    #define REQUIRE_CLICK_TO_FOCUS
+// Use a "click inside window to focus" mechanism on desktop platforms when the mouse cursor is hidden
+#if defined(WIN32) || (defined(__APPLE__) && !defined(IOS)) || (defined(__linux__) && !defined(ANDROID) && !defined(RPI))
+#define REQUIRE_CLICK_TO_FOCUS
 #endif
 
 namespace Urho3D
@@ -75,6 +77,106 @@ UIElement* TouchState::GetTouchedElement()
 {
     return touchedElement_.Get();
 }
+
+#ifdef EMSCRIPTEN
+#define EM_TRUE 1
+
+/// Glue between Urho Input and Emscripten HTML5
+/** HTML5 (Emscripten) is limited in the way it handles input. The EmscriptenInput class attempts to provide the glue between Urho3D Input behavior and HTML5, where SDL currently fails to do so.
+ *
+ * Mouse Input:
+ * - The OS mouse cursor position can't be set.
+ * - The mouse can be trapped within play area via 'PointerLock API', which requires a request and interaction between the user and browser.
+ * - To request mouse lock, call SetMouseMode(MM_RELATIVE). The E_MOUSEMODECHANGED event will be sent if/when the user confirms the request.
+ * NOTE: The request must be initiated by the user (eg: on mouse button down/up, key down/up).
+ * - The user can press 'escape' key and browser will force user out of pointer lock. Urho will send the E_MOUSEMODECHANGED event.
+ * - SetMouseMode(MM_ABSOLUTE) will leave pointer lock.
+ * - MM_WRAP is unsupported.
+ */
+/// % Emscripten Input glue. Intended to be used by the Input subsystem only.
+class EmscriptenInput
+{
+public:
+    /// Constructor, expecting pointer to constructing Input instance.
+    EmscriptenInput(Input* inputInst);
+
+    /// Static callback method for Pointer Lock API. Handles change in Pointer Lock state and sends events for mouse mode change.
+    static EM_BOOL HandlePointerLockChange(int eventType, const EmscriptenPointerlockChangeEvent* keyEvent, void* userData);
+    /// Static callback method for tracking focus change events.
+    static EM_BOOL HandleFocusChange(int eventType, const EmscriptenFocusEvent* keyEvent, void* userData);
+
+    /// Send request to user to gain pointer lock. This requires a user-browser interaction on the first call.
+    void RequestPointerLock();
+    /// Send request to exit pointer lock. This has the benefit of not requiring the user-browser interaction on the next pointer lock request.
+    void ExitPointerLock();
+    /// Returns whether the page is visible.
+    bool IsVisible();
+
+private:
+    /// Instance of Input subsystem that constructed this instance.
+    Input* inputInst_;
+};
+
+EmscriptenInput::EmscriptenInput(Input* inputInst)
+{
+    inputInst_ = inputInst;
+    void* vInputInst = (void*)inputInst;
+    emscripten_set_pointerlockchange_callback(NULL, vInputInst, false, EmscriptenInput::HandlePointerLockChange);
+
+    // Handle focus changes:
+    emscripten_set_blur_callback(NULL, vInputInst, false, EmscriptenInput::HandleFocusChange);
+    emscripten_set_focus_callback(NULL, vInputInst, false, EmscriptenInput::HandleFocusChange);
+}
+
+void EmscriptenInput::RequestPointerLock()
+{
+    emscripten_request_pointerlock(NULL, true);
+}
+
+void EmscriptenInput::ExitPointerLock()
+{
+    inputInst_->emscriptenExitingPointerLock_ = true;
+    emscripten_exit_pointerlock();
+}
+
+bool EmscriptenInput::IsVisible()
+{
+    EmscriptenVisibilityChangeEvent visibilityStatus;
+    if (emscripten_get_visibility_status(&visibilityStatus) >= EMSCRIPTEN_RESULT_SUCCESS)
+        return visibilityStatus.hidden >= EM_TRUE ? false : true;
+
+    // Assume visible
+    LOGWARNING("Could not determine visibility status.");
+    return true;
+}
+
+EM_BOOL EmscriptenInput::HandlePointerLockChange(int eventType, const EmscriptenPointerlockChangeEvent* keyEvent, void* userData)
+{
+    Input* inputInst = (Input*)userData;
+    if (keyEvent->isActive >= EM_TRUE)
+    {
+        // Pointer Lock is now active
+        inputInst->emscriptenEnteredPointerLock_ = true;
+        inputInst->SetMouseModeEmscripten(MM_RELATIVE);
+    }
+    else
+    {
+        // Pointer Lock is now inactive
+        inputInst->SetMouseModeEmscripten(MM_ABSOLUTE);
+    }
+    return EM_TRUE;
+}
+
+EM_BOOL EmscriptenInput::HandleFocusChange(int eventType, const EmscriptenFocusEvent* keyEvent, void* userData)
+{
+    Input* inputInst = (Input*)userData;
+    if (eventType == EMSCRIPTEN_EVENT_BLUR)
+        inputInst->LoseFocus();
+    else if (eventType == EMSCRIPTEN_EVENT_FOCUS)
+        inputInst->GainFocus();
+    return EM_TRUE;
+}
+#endif
 
 void JoystickState::Initialize(unsigned numButtons, unsigned numAxes, unsigned numHats)
 {
@@ -103,6 +205,7 @@ Input::Input(Context* context) :
     Object(context),
     mouseButtonDown_(0),
     mouseButtonPress_(0),
+    lastVisibleMousePosition_(MOUSE_POSITION_OFFSCREEN),
     mouseMoveWheel_(0),
     windowID_(0),
     toggleFullscreen_(true),
@@ -110,12 +213,17 @@ Input::Input(Context* context) :
     lastMouseVisible_(false),
     mouseGrabbed_(false),
     mouseMode_(MM_ABSOLUTE),
-    lastVisibleMousePosition_(MOUSE_POSITION_OFFSCREEN),
+    #ifdef EMSCRIPTEN
+    emscriptenExitingPointerLock_(false),
+    emscriptenEnteredPointerLock_(false),
+    #endif
     touchEmulation_(false),
     inputFocus_(false),
     minimized_(false),
     focusedThisFrame_(false),
     suppressNextMouseMove_(false),
+    inResize_(false),
+    screenModeChanged_(false),
     initialized_(false)
 {
     for (int i = 0; i < TOUCHID_MAX; i++)
@@ -123,12 +231,20 @@ Input::Input(Context* context) :
 
     SubscribeToEvent(E_SCREENMODE, HANDLER(Input, HandleScreenMode));
 
+    #ifdef EMSCRIPTEN
+    emscriptenInput_ = new EmscriptenInput(this);
+    #endif
+
     // Try to initialize right now, but skip if screen mode is not yet set
     Initialize();
 }
 
 Input::~Input()
 {
+    #ifdef EMSCRIPTEN
+    delete emscriptenInput_;
+    emscriptenInput_ = 0;
+    #endif
 }
 
 void Input::Update()
@@ -157,17 +273,43 @@ void Input::Update()
         state.delta_ = IntVector2::ZERO;
     }
 
-    // Check and handle SDL events
     SDL_Event evt;
     while (SDL_PollEvent(&evt))
         HandleSDLEvent(&evt);
 
+    // Check for focus change this frame
+    SDL_Window* window = graphics_->GetImpl()->GetWindow();
+    unsigned flags = window ? SDL_GetWindowFlags(window) & (SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS) : 0;
+    #ifndef EMSCRIPTEN
+    if (window)
+    {
+        #ifdef REQUIRE_CLICK_TO_FOCUS
+        // When using the "click to focus" mechanism, only focus automatically in fullscreen or non-hidden mouse mode
+        if (!inputFocus_ && (mouseVisible_ || graphics_->GetFullscreen() || screenModeChanged_) && (flags & SDL_WINDOW_INPUT_FOCUS))
+        #else
+        if (!inputFocus_ && (flags & SDL_WINDOW_INPUT_FOCUS))
+        #endif
+        {
+            screenModeChanged_ = false;
+            focusedThisFrame_ = true;
+        }
+
+        if (focusedThisFrame_)
+            GainFocus();
+
+        if (inputFocus_ && (flags & SDL_WINDOW_INPUT_FOCUS) == 0)
+            LoseFocus();
+    }
+    else
+        return;
+
+    // Handle mouse mode MM_WRAP
     if (mouseVisible_ && mouseMode_ == MM_WRAP)
     {
         IntVector2 mpos;
         SDL_GetMouseState(&mpos.x_, &mpos.y_);
 
-        int buffer = 5;
+        const int buffer = 5;
         int width = graphics_->GetWidth() - buffer * 2;
         int height = graphics_->GetHeight() - buffer * 2;
 
@@ -202,36 +344,27 @@ void Input::Update()
             SDL_FlushEvent(SDL_MOUSEMOTION);
         }
     }
-
-    // Check for activation and inactivation from SDL window flags. Must nullcheck the window pointer because it may have
-    // been closed due to input events
-    SDL_Window* window = graphics_->GetImpl()->GetWindow();
-    unsigned flags = window ? SDL_GetWindowFlags(window) & (SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS) : 0;
-    if (window)
-    {
-#ifdef REQUIRE_CLICK_TO_FOCUS
-        if (!inputFocus_ && (graphics_->GetFullscreen() || mouseVisible_) && flags == (SDL_WINDOW_INPUT_FOCUS |
-            SDL_WINDOW_MOUSE_FOCUS))
-#else
-        if (!inputFocus_ && (flags & SDL_WINDOW_INPUT_FOCUS))
-#endif
-            focusedThisFrame_ = true;
-
-        if (focusedThisFrame_)
-            GainFocus();
-
-        if (inputFocus_ && (flags & SDL_WINDOW_INPUT_FOCUS) == 0)
-            LoseFocus();
-    }
-    else
+    #else
+    if (!window)
         return;
 
+    if (emscriptenExitingPointerLock_)
+    {
+        // Suppress mouse jump when exiting Pointer Lock
+        IntVector2 mousePosition = GetMousePosition();
+        mouseMove_ = IntVector2::ZERO;
+        lastMousePosition_ = lastVisibleMousePosition_;
+        emscriptenExitingPointerLock_ = false;
+        return;
+    }
+    #endif
+
     // Check for relative mode mouse move
-    if (!touchEmulation_ && (graphics_->GetExternalWindow() || (!mouseVisible_ && inputFocus_ && (flags & SDL_WINDOW_MOUSE_FOCUS))))
+    if (!touchEmulation_ && mouseMode_ != MM_RELATIVE && (graphics_->GetExternalWindow() || (!mouseVisible_ && inputFocus_ && (flags & SDL_WINDOW_MOUSE_FOCUS))))
     {
         IntVector2 mousePosition = GetMousePosition();
         mouseMove_ = mousePosition - lastMousePosition_;
-
+        #ifndef EMSCRIPTEN
         if (graphics_->GetExternalWindow())
             lastMousePosition_ = mousePosition;
         else
@@ -244,7 +377,10 @@ void Input::Update()
                 lastMousePosition_ = center;
             }
         }
-
+        #else
+        if (mouseMode_ == MM_ABSOLUTE)
+            lastMousePosition_ = mousePosition;
+        #endif
         // Send mouse move event if necessary
         if (mouseMove_ != IntVector2::ZERO)
         {
@@ -271,6 +407,21 @@ void Input::Update()
             }
         }
     }
+
+    #ifndef EMSCRIPTEN
+    if (mouseMode_ == MM_RELATIVE)
+    {
+        IntVector2 mousePosition = GetMousePosition();
+        IntVector2 center(graphics_->GetWidth() / 2, graphics_->GetHeight() / 2);
+        if (graphics_->GetExternalWindow())
+            lastMousePosition_ = mousePosition;
+        else if (mousePosition != center)
+        {
+            SetMousePosition(center);
+            lastMousePosition_ = center;
+        }
+    }
+    #endif
 }
 
 void Input::SetMouseVisible(bool enable, bool suppressEvent)
@@ -303,17 +454,25 @@ void Input::SetMouseVisible(bool enable, bool suppressEvent)
             if (!mouseVisible_ && inputFocus_)
             {
                 SDL_ShowCursor(SDL_FALSE);
+                #ifndef EMSCRIPTEN
                 // Recenter the mouse cursor manually when hiding it to avoid erratic mouse move for one frame
                 lastVisibleMousePosition_ = GetMousePosition();
                 IntVector2 center(graphics_->GetWidth() / 2, graphics_->GetHeight() / 2);
                 SetMousePosition(center);
                 lastMousePosition_ = center;
+                #else
+                lastVisibleMousePosition_ = GetMousePosition();
+                lastMousePosition_ = lastVisibleMousePosition_;
+                #endif
             }
             else
             {
                 SDL_ShowCursor(SDL_TRUE);
+                #ifndef EMSCRIPTEN
                 if (lastVisibleMousePosition_.x_ != MOUSE_POSITION_OFFSCREEN.x_ && lastVisibleMousePosition_.y_ != MOUSE_POSITION_OFFSCREEN.y_)
                     SetMousePosition(lastVisibleMousePosition_);
+                lastMousePosition_ = lastVisibleMousePosition_;
+                #endif
             }
         }
 
@@ -333,6 +492,50 @@ void Input::SetMouseVisible(bool enable, bool suppressEvent)
     #endif
 }
 
+void Input::ResetMouseVisible()
+{
+    #ifndef EMSCRIPTEN
+    SetMouseVisible(lastMouseVisible_, true);
+    #else
+    SetMouseVisibleEmscripten(lastMouseVisible_);
+    #endif
+}
+
+#ifdef EMSCRIPTEN
+void Input::SetMouseVisibleEmscripten(bool enable)
+{
+    if (enable != mouseVisible_)
+    {
+        mouseVisible_ = enable;
+        SDL_ShowCursor(enable ? SDL_TRUE : SDL_FALSE);
+
+        if (!mouseVisible_)
+            lastVisibleMousePosition_ = GetMousePosition();
+
+        lastMousePosition_ = lastVisibleMousePosition_;
+    }
+}
+
+void Input::SetMouseModeEmscripten(MouseMode mode)
+{
+    mouseMode_ = mode;
+
+    if (mode == MM_RELATIVE)
+    {
+        SetMouseVisibleEmscripten(false);
+    }
+    else
+    {
+        ResetMouseVisible();
+    }
+    suppressNextMouseMove_ = true;
+
+    VariantMap& eventData = GetEventDataMap();
+    eventData[MouseModeChanged::P_MODE] = mode;
+    SendEvent(E_MOUSEMODECHANGED, eventData);
+}
+#endif
+
 void Input::SetMouseGrabbed(bool grab)
 {
     mouseGrabbed_ = grab;
@@ -344,47 +547,68 @@ void Input::SetMouseMode(MouseMode mode)
     {
         MouseMode previousMode = mouseMode_;
         mouseMode_ = mode;
+        suppressNextMouseMove_ = true;
+        SDL_Window* window = graphics_->GetImpl()->GetWindow();
         // Handle changing away from previous mode
         if (previousMode == MM_RELATIVE)
         {
+            #ifndef EMSCRIPTEN
             /// \todo Use SDL_SetRelativeMouseMode() for MM_RELATIVE mode
             ResetMouseVisible();
+            #else
+            emscriptenInput_->ExitPointerLock();
+            #endif
 
-            // Send updated mouse position:
-            using namespace MouseMove;
-
-            VariantMap& eventData = GetEventDataMap();
-            eventData[P_X] = lastVisibleMousePosition_.x_;
-            eventData[P_Y] = lastVisibleMousePosition_.y_;
-            eventData[P_DX] = mouseMove_.x_;
-            eventData[P_DY] = mouseMove_.y_;
-            eventData[P_BUTTONS] = mouseButtonDown_;
-            eventData[P_QUALIFIERS] = GetQualifiers();
-            SendEvent(E_MOUSEMOVE, eventData);
-        }
-        else if (previousMode == MM_WRAP)
-        {
-            SDL_Window* window = graphics_->GetImpl()->GetWindow();
             SDL_SetWindowGrab(window, SDL_FALSE);
         }
+        #ifndef EMSCRIPTEN
+        else if (previousMode == MM_WRAP)
+            SDL_SetWindowGrab(window, SDL_FALSE);
+        #endif
 
         // Handle changing to new mode
         if (mode == MM_ABSOLUTE)
+        {
+            #ifndef EMSCRIPTEN
             SetMouseGrabbed(false);
+            VariantMap& eventData = GetEventDataMap();
+            eventData[MouseModeChanged::P_MODE] = mode;
+            SendEvent(E_MOUSEMODECHANGED, eventData);
+            #else
+            // Deferred mouse mode change to PointerLock callback
+            #endif
+        }
         else
         {
             SetMouseGrabbed(true);
 
             if (mode == MM_RELATIVE)
             {
+                SDL_SetWindowGrab(window, SDL_TRUE);
+                #ifndef EMSCRIPTEN
                 SetMouseVisible(false, true);
+
+                VariantMap& eventData = GetEventDataMap();
+                eventData[MouseModeChanged::P_MODE] = mode;
+                SendEvent(E_MOUSEMODECHANGED, eventData);
+                #else
+                // Defer mouse mode change to PointerLock callback
+                mouseMode_ = previousMode;
+                emscriptenInput_->RequestPointerLock();
+                #endif
+
             }
+            #ifndef EMSCRIPTEN
             else if (mode == MM_WRAP)
             {
                 /// \todo When SDL 2.0.4 is integrated, use SDL_CaptureMouse() and global mouse functions for MM_WRAP mode.
-                SDL_Window* window = graphics_->GetImpl()->GetWindow();
                 SDL_SetWindowGrab(window, SDL_TRUE);
+
+                VariantMap& eventData = GetEventDataMap();
+                eventData[MouseModeChanged::P_MODE] = mode;
+                SendEvent(E_MOUSEMODECHANGED, eventData);
             }
+            #endif
         }
     }
 }
@@ -721,14 +945,21 @@ unsigned Input::LoadGestures(Deserializer& source)
     return SDL_LoadDollarTemplates(-1, wrapper.GetRWOps());
 }
 
+
 bool Input::RemoveGesture(unsigned gestureID)
 {
+    #ifdef EMSCRIPTEN
+    return false;
+    #else
     return SDL_RemoveDollarTemplate(gestureID) != 0;
+    #endif
 }
 
 void Input::RemoveAllGestures()
 {
+    #ifndef EMSCRIPTEN
     SDL_RemoveAllDollarTemplates();
+    #endif
 }
 
 SDL_JoystickID Input::OpenJoystick(unsigned index)
@@ -950,8 +1181,16 @@ void Input::Initialize()
         mouseVisible_ = true;
 
     // Set the initial activation
-    focusedThisFrame_ = true;
     initialized_ = true;
+    #ifndef EMSCRIPTEN
+    focusedThisFrame_ = true;
+    #else
+    // Note: Page visibility and focus are slightly different, however we can't query last focus with Emscripten (1.29.0)
+    if (emscriptenInput_->IsVisible())
+        GainFocus();
+    else
+        LoseFocus();
+    #endif
 
     ResetJoysticks();
     ResetState();
@@ -1130,17 +1369,17 @@ void Input::SendInputFocusEvent()
 
 void Input::SetMouseButton(int button, bool newState)
 {
-#ifdef REQUIRE_CLICK_TO_FOCUS
-    if (!mouseVisible_ && !graphics_->GetFullscreen())
+    #ifdef EMSCRIPTEN
+    if (emscriptenEnteredPointerLock_)
     {
-        if (!inputFocus_ && newState && button == MOUSEB_LEFT)
-            focusedThisFrame_ = true;
+        // Suppress mouse jump on initial Pointer Lock
+        IntVector2 mousePosition = GetMousePosition();
+        lastMousePosition_ = mousePosition;
+        mouseMove_ = IntVector2::ZERO;
+        suppressNextMouseMove_ = true;
+        emscriptenEnteredPointerLock_ = false;
     }
-#endif
-
-    // If we do not have focus yet, do not react to the mouse button down
-    if (!graphics_->GetExternalWindow() && newState && !inputFocus_)
-        return;
+    #endif
 
     if (newState)
     {
@@ -1168,10 +1407,6 @@ void Input::SetMouseButton(int button, bool newState)
 
 void Input::SetKey(int key, int scancode, unsigned raw, bool newState)
 {
-    // If we do not have focus yet, do not react to the key down
-    if (!graphics_->GetExternalWindow() && newState && !inputFocus_)
-        return;
-
     bool repeat = false;
 
     if (newState)
@@ -1214,10 +1449,6 @@ void Input::SetKey(int key, int scancode, unsigned raw, bool newState)
 
 void Input::SetMouseWheel(int delta)
 {
-    // If we do not have focus yet, do not react to the wheel
-    if (!graphics_->GetExternalWindow() && !inputFocus_)
-        return;
-
     if (delta)
     {
         mouseMoveWheel_ += delta;
@@ -1244,15 +1475,46 @@ void Input::HandleSDLEvent(void* sdlEvent)
 {
     SDL_Event& evt = *static_cast<SDL_Event*>(sdlEvent);
 
+    // While not having input focus, skip key/mouse/touch/joystick events, except for the "click to focus" mechanism
+    if (!inputFocus_ && evt.type >= SDL_KEYDOWN && evt.type <= SDL_MULTIGESTURE)
+    {
+        #ifdef REQUIRE_CLICK_TO_FOCUS
+        // Require the click to be at least 1 pixel inside the window to disregard clicks in the title bar
+        if (evt.type == SDL_MOUSEBUTTONDOWN && evt.button.x > 0 && evt.button.y > 0 && evt.button.x < graphics_->GetWidth() - 1 &&
+            evt.button.y < graphics_->GetHeight() - 1)
+        {
+            focusedThisFrame_ = true;
+            // Do not cause the click to actually go throughfin
+            return;
+        }
+        else if (evt.type == SDL_FINGERDOWN)
+        {
+            // When focusing by touch, call GainFocus() immediately as it resets the state; a touch has sustained state
+            // which should be kept
+            GainFocus();
+        }
+        else
+        #endif
+            return;
+    }
+
     switch (evt.type)
     {
     case SDL_KEYDOWN:
         // Convert to uppercase to match Win32 virtual key codes
+        #ifdef EMSCRIPTEN
+        SetKey(ConvertSDLKeyCode(evt.key.keysym.sym, evt.key.keysym.scancode), evt.key.keysym.scancode, 0, true);
+        #else
         SetKey(ConvertSDLKeyCode(evt.key.keysym.sym, evt.key.keysym.scancode), evt.key.keysym.scancode, evt.key.keysym.raw, true);
+        #endif
         break;
 
     case SDL_KEYUP:
+        #ifdef EMSCRIPTEN
+        SetKey(ConvertSDLKeyCode(evt.key.keysym.sym, evt.key.keysym.scancode), evt.key.keysym.scancode, 0, false);
+        #else
         SetKey(ConvertSDLKeyCode(evt.key.keysym.sym, evt.key.keysym.scancode), evt.key.keysym.scancode, evt.key.keysym.raw, false);
+        #endif
         break;
 
     case SDL_TEXTINPUT:
@@ -1365,8 +1627,12 @@ void Input::HandleSDLEvent(void* sdlEvent)
             int touchID = GetTouchIndexFromID(evt.tfinger.fingerId & 0x7ffffff);
             TouchState& state = touches_[touchID];
             state.touchID_ = touchID;
+            #ifndef EMSCRIPTEN
             state.lastPosition_ = state.position_ = IntVector2((int)(evt.tfinger.x * graphics_->GetWidth()),
                 (int)(evt.tfinger.y * graphics_->GetHeight()));
+            #else
+            state.position_ = IntVector2((int)(evt.tfinger.x), (int)(evt.tfinger.y));
+            #endif
             state.delta_ = IntVector2::ZERO;
             state.pressure_ = evt.tfinger.pressure;
 
@@ -1378,6 +1644,10 @@ void Input::HandleSDLEvent(void* sdlEvent)
             eventData[P_Y] = state.position_.y_;
             eventData[P_PRESSURE] = state.pressure_;
             SendEvent(E_TOUCHBEGIN, eventData);
+
+            // Finger touch may move the mouse cursor. Suppress next mouse move when cursor hidden to prevent jumps
+            if (!mouseVisible_)
+                suppressNextMouseMove_ = true;
         }
         break;
 
@@ -1413,8 +1683,12 @@ void Input::HandleSDLEvent(void* sdlEvent)
                 break;
             TouchState& state = touches_[touchID];
             state.touchID_ = touchID;
+            #ifndef EMSCRIPTEN
             state.position_ = IntVector2((int)(evt.tfinger.x * graphics_->GetWidth()),
                 (int)(evt.tfinger.y * graphics_->GetHeight()));
+            #else
+            state.position_ = IntVector2((int)(evt.tfinger.x), (int)(evt.tfinger.y));
+            #endif
             state.delta_ = state.position_ - state.lastPosition_;
             state.pressure_ = evt.tfinger.pressure;
 
@@ -1424,10 +1698,19 @@ void Input::HandleSDLEvent(void* sdlEvent)
             eventData[P_TOUCHID] = touchID;
             eventData[P_X] = state.position_.x_;
             eventData[P_Y] = state.position_.y_;
+            #ifndef EMSCRIPTEN
             eventData[P_DX] = (int)(evt.tfinger.dx * graphics_->GetWidth());
             eventData[P_DY] = (int)(evt.tfinger.dy * graphics_->GetHeight());
+            #else
+            eventData[P_DX] = (int)(evt.tfinger.dx);
+            eventData[P_DY] = (int)(evt.tfinger.dy);
+            #endif
             eventData[P_PRESSURE] = state.pressure_;
             SendEvent(E_TOUCHMOVE, eventData);
+
+            // Finger touch may move the mouse cursor. Suppress next mouse move when cursor hidden to prevent jumps
+            if (!mouseVisible_)
+                suppressNextMouseMove_ = true;
         }
         break;
 
@@ -1677,7 +1960,9 @@ void Input::HandleSDLEvent(void* sdlEvent)
             #endif
 
             case SDL_WINDOWEVENT_RESIZED:
+                inResize_ = true;
                 graphics_->WindowResized();
+                inResize_ = false;
                 break;
             case SDL_WINDOWEVENT_MOVED:
                 graphics_->WindowMoved();
@@ -1717,12 +2002,16 @@ void Input::HandleScreenMode(StringHash eventType, VariantMap& eventData)
     SDL_Window* window = graphics_->GetImpl()->GetWindow();
     windowID_ = SDL_GetWindowID(window);
 
-    if (!mouseVisible_)
+    // If screen mode happens due to mouse drag resize, do not recenter the mouse as that would lead to erratic window sizes
+    if (!mouseVisible_ && !inResize_)
     {
         IntVector2 center(graphics_->GetWidth() / 2, graphics_->GetHeight() / 2);
         SetMousePosition(center);
         lastMousePosition_ = center;
+        focusedThisFrame_ = true;
     }
+    else
+        lastMousePosition_ = GetMousePosition();
 
     // Resize screen joysticks to new screen size
     for (HashMap<SDL_JoystickID, JoystickState>::Iterator i = joysticks_.Begin(); i != joysticks_.End(); ++i)
@@ -1731,11 +2020,16 @@ void Input::HandleScreenMode(StringHash eventType, VariantMap& eventData)
         if (screenjoystick)
             screenjoystick->SetSize(graphics_->GetWidth(), graphics_->GetHeight());
     }
-    
-    focusedThisFrame_ = true;
+
+    if (graphics_->GetFullscreen())
+        focusedThisFrame_ = true;
 
     // After setting a new screen mode we should not be minimized
     minimized_ = (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED) != 0;
+
+    // Remember that screen mode changed in case we lose focus (needed on Linux)
+    if (!inResize_)
+        screenModeChanged_ = true;
 }
 
 void Input::HandleBeginFrame(StringHash eventType, VariantMap& eventData)

@@ -223,14 +223,14 @@ void Node::AddReplicationState(NodeReplicationState* state)
     networkState_->replicationStates_.Push(state);
 }
 
-bool Node::SaveXML(Serializer& dest) const
+bool Node::SaveXML(Serializer& dest, const String& indentation) const
 {
     SharedPtr<XMLFile> xml(new XMLFile(context_));
     XMLElement rootElem = xml->CreateRoot("node");
     if (!SaveXML(rootElem))
         return false;
 
-    return xml->Save(dest);
+    return xml->Save(dest, indentation);
 }
 
 void Node::SetName(const String& name)
@@ -681,6 +681,11 @@ void Node::RemoveChildren(bool removeReplicated, bool removeLocal, bool recursiv
 
 Component* Node::CreateComponent(StringHash type, CreateMode mode, unsigned id)
 {
+    // Do not attempt to create replicated components to local nodes, as that may lead to component ID overwrite
+    // as replicated components are synced over
+    if (id_ >= FIRST_LOCAL_ID && mode == REPLICATED)
+        mode = LOCAL;
+
     // Check that creation succeeds and that the object in fact is a component
     SharedPtr<Component> newComponent = DynamicCast<Component>(context_->CreateObject(type));
     if (!newComponent)
@@ -1631,6 +1636,11 @@ void Node::SetEnabled(bool enable, bool recursive, bool storeSelf)
 
 Component* Node::SafeCreateComponent(const String& typeName, StringHash type, CreateMode mode, unsigned id)
 {
+    // Do not attempt to create replicated components to local nodes, as that may lead to component ID overwrite
+    // as replicated components are synced over
+    if (id_ >= FIRST_LOCAL_ID && mode == REPLICATED)
+        mode = LOCAL;
+
     // First check if factory for type exists
     if (!context_->GetTypeName(type).Empty())
         return CreateComponent(type, mode, id);
@@ -1777,8 +1787,6 @@ Node* Node::CloneRecursive(Node* parent, SceneResolver& resolver, CreateMode mod
 
 void Node::RemoveComponent(Vector<SharedPtr<Component> >::Iterator i)
 {
-    WeakPtr<Component> componentWeak(*i);
-
     // Send node change event. Do not send when already being destroyed
     if (Refs() > 0 && scene_)
     {
@@ -1795,11 +1803,8 @@ void Node::RemoveComponent(Vector<SharedPtr<Component> >::Iterator i)
     RemoveListener(*i);
     if (scene_)
         scene_->ComponentRemoved(*i);
+    (*i)->SetNode(0);
     components_.Erase(i);
-
-    // If the component is still referenced elsewhere, reset its node pointer now
-    if (componentWeak)
-        componentWeak->SetNode(0);
 }
 
 void Node::HandleAttributeAnimationUpdate(StringHash eventType, VariantMap& eventData)

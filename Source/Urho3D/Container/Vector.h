@@ -214,7 +214,7 @@ public:
         unsigned pos = dest - Begin();
         if (pos > size_)
             pos = size_;
-        unsigned length = end - start;
+        unsigned length = (unsigned)(end - start);
         Resize(size_ + length, 0);
         MoveRange(pos + length, pos, size_ - pos - length);
         
@@ -231,7 +231,7 @@ public:
         unsigned pos = dest - Begin();
         if (pos > size_)
             pos = size_;
-        unsigned length = end - start;
+        unsigned length = (unsigned)(end - start);
         Resize(size_ + length, 0);
         MoveRange(pos + length, pos, size_ - pos - length);
         
@@ -270,7 +270,7 @@ public:
         unsigned pos = start - Begin();
         if (pos >= size_)
             return End();
-        unsigned length = end - start;
+        unsigned length = (unsigned)(end - start);
         Erase(pos, length);
         
         return Begin() + pos;
@@ -651,7 +651,7 @@ public:
         unsigned pos = dest - Begin();
         if (pos > size_)
             pos = size_;
-        unsigned length = end - start;
+        unsigned length = (unsigned)(end - start);
         Resize(size_ + length);
         MoveRange(pos + length, pos, size_ - pos - length);
         CopyElements(Buffer() + pos, &(*start), length);
@@ -665,7 +665,7 @@ public:
         unsigned pos = dest - Begin();
         if (pos > size_)
             pos = size_;
-        unsigned length = end - start;
+        unsigned length = (unsigned)(end - start);
         Resize(size_ + length);
         MoveRange(pos + length, pos, size_ - pos - length);
         
@@ -704,7 +704,7 @@ public:
         unsigned pos = start - Begin();
         if (pos >= size_)
             return End();
-        unsigned length = end - start;
+        unsigned length = (unsigned)(end - start);
         Erase(pos, length);
         
         return Begin() + pos;
@@ -840,5 +840,20 @@ private:
             memcpy(dest, src, count * sizeof(T));
     }
 };
+
+}
+
+namespace std
+{
+
+template <class T> typename Urho3D::Vector<T>::ConstIterator begin(const Urho3D::Vector<T>& v) { return v.Begin(); }
+template <class T> typename Urho3D::Vector<T>::ConstIterator end(const Urho3D::Vector<T>& v) { return v.End(); }
+template <class T> typename Urho3D::Vector<T>::Iterator begin(Urho3D::Vector<T>& v) { return v.Begin(); }
+template <class T> typename Urho3D::Vector<T>::Iterator end(Urho3D::Vector<T>& v) { return v.End(); }
+
+template <class T> typename Urho3D::PODVector<T>::ConstIterator begin(const Urho3D::PODVector<T>& v) { return v.Begin(); }
+template <class T> typename Urho3D::PODVector<T>::ConstIterator end(const Urho3D::PODVector<T>& v) { return v.End(); }
+template <class T> typename Urho3D::PODVector<T>::Iterator begin(Urho3D::PODVector<T>& v) { return v.Begin(); }
+template <class T> typename Urho3D::PODVector<T>::Iterator end(Urho3D::PODVector<T>& v) { return v.End(); }
 
 }

@@ -91,6 +91,7 @@ Urho3D development, contributions and bugfixes by:
 - Firegorilla
 - Magic.Lixin
 - Mike3D
+- Modanung
 - OvermindDL1
 - andmar1x
 - amadeus_osa
@@ -101,6 +102,7 @@ Urho3D development, contributions and bugfixes by:
 - mightyCelu
 - nemerle
 - ninjastone
+- raould
 - rasteron
 - reattiva
 - rifai
@@ -137,7 +139,7 @@ Urho3D uses the following third-party libraries:
 - MojoShader (http://icculus.org/mojoshader/)
 - Open Asset Import Library (http://assimp.sourceforge.net/)
 - rapidjson 0.11 (https://code.google.com/p/rapidjson/)
-- pugixml 1.0 (http://pugixml.org/)
+- pugixml 1.5 (http://pugixml.org/)
 - Recast/Detour (http://code.google.com/p/recastnavigation/)
 - SDL 2.0.3 (http://www.libsdl.org/)
 - StanHull (http://codesuppository.blogspot.com/2006/03/john-ratcliffs-code-suppository-blog.html)

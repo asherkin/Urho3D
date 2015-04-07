@@ -83,14 +83,18 @@ bool JSONFile::BeginLoad(Deserializer& source)
 
 bool JSONFile::Save(Serializer& dest) const
 {
+    return Save(dest, "\t");
+}
+
+bool JSONFile::Save(Serializer& dest, const String& indendation) const
+{
     StringBuffer buffer;
     PrettyWriter<StringBuffer> writer(buffer, &(document_->GetAllocator()));
-    writer.SetIndent('\t', 1);
+    writer.SetIndent(!indendation.Empty() ?  indendation.Front() : '\0', indendation.Length());
 
     document_->Accept(writer);
-    dest.Write(buffer.GetString(), buffer.GetSize());
-
-    return true;
+    unsigned size = (unsigned)buffer.GetSize();
+    return dest.Write(buffer.GetString(), size) == size;
 }
 
 JSONValue JSONFile::CreateRoot(JSONValueType valueType)

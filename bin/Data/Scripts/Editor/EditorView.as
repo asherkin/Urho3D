@@ -182,6 +182,7 @@ class ViewportContext
 
         SubscribeToEvent(settingsButton, "Released", "ToggleViewportSettingsWindow");
         SubscribeToEvent(settingsWindow.GetChild("ResetCamera", true), "Released", "ResetCamera");
+        SubscribeToEvent(settingsWindow.GetChild("CopyTransform", true), "Released", "HandleCopyTransformClicked");
         SubscribeToEvent(settingsWindow.GetChild("CloseButton", true), "Released", "CloseViewportSettingsWindow");
         SubscribeToEvent(settingsWindow.GetChild("Refresh", true), "Released", "UpdateSettingsUI");
         HandleResize();
@@ -250,6 +251,7 @@ class ViewportContext
         UpdateSettingsUI();
         /* settingsWindow.position = */
         settingsWindow.visible = true;
+        settingsWindow.BringToFront();
     }
 
     void CloseViewportSettingsWindow()
@@ -309,6 +311,14 @@ class ViewportContext
             camera.zoom = element.text.ToFloat();
         else if (element is cameraOrthoSize)
             camera.orthoSize = element.text.ToFloat();
+    }
+    void HandleCopyTransformClicked(StringHash eventType, VariantMap& eventData)
+    {
+        if (editNode !is null)
+        {
+            editNode.position = cameraNode.position;
+            editNode.rotation = cameraNode.rotation;
+        }
     }
 }
 
@@ -1044,25 +1054,33 @@ void UpdateGrid(bool updateGridGeometry = true)
         {
             grid.DefineVertex(Vector3(lineOffset, 0.0, halfSizeScaled));
             grid.DefineColor(lineCenter ? gridZColor : (lineSubdiv ? gridSubdivisionColor : gridColor));
+            grid.DefineTexCoord(Vector2(0.0f, 0.0f));
             grid.DefineVertex(Vector3(lineOffset, 0.0, -halfSizeScaled));
             grid.DefineColor(lineCenter ? gridZColor : (lineSubdiv ? gridSubdivisionColor : gridColor));
+            grid.DefineTexCoord(Vector2(0.0f, 0.0f));
 
             grid.DefineVertex(Vector3(-halfSizeScaled, 0.0, lineOffset));
             grid.DefineColor(lineCenter ? gridXColor : (lineSubdiv ? gridSubdivisionColor : gridColor));
+            grid.DefineTexCoord(Vector2(0.0f, 0.0f));
             grid.DefineVertex(Vector3(halfSizeScaled, 0.0, lineOffset));
             grid.DefineColor(lineCenter ? gridXColor : (lineSubdiv ? gridSubdivisionColor : gridColor));
+            grid.DefineTexCoord(Vector2(0.0f, 0.0f));
         }
         else
         {
             grid.DefineVertex(Vector3(lineOffset, halfSizeScaled, 0.0));
             grid.DefineColor(lineCenter ? gridYColor : (lineSubdiv ? gridSubdivisionColor : gridColor));
+            grid.DefineTexCoord(Vector2(0.0f, 0.0f));
             grid.DefineVertex(Vector3(lineOffset, -halfSizeScaled, 0.0));
             grid.DefineColor(lineCenter ? gridYColor : (lineSubdiv ? gridSubdivisionColor : gridColor));
+            grid.DefineTexCoord(Vector2(0.0f, 0.0f));
 
             grid.DefineVertex(Vector3(-halfSizeScaled, lineOffset, 0.0));
             grid.DefineColor(lineCenter ? gridXColor : (lineSubdiv ? gridSubdivisionColor : gridColor));
+            grid.DefineTexCoord(Vector2(0.0f, 0.0f));
             grid.DefineVertex(Vector3(halfSizeScaled, lineOffset, 0.0));
             grid.DefineColor(lineCenter ? gridXColor : (lineSubdiv ? gridSubdivisionColor : gridColor));
+            grid.DefineTexCoord(Vector2(0.0f, 0.0f));
         }
 
         lineOffset  += scale;

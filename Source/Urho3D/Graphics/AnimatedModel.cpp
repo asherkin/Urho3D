@@ -135,7 +135,7 @@ void AnimatedModel::ProcessRayQuery(const RayOctreeQuery& query, PODVector<RayQu
 {
     // If no bones or no bone-level testing, use the StaticModel test
     RayQueryLevel level = query.level_;
-    if (level < RAY_AABB || !skeleton_.GetNumBones())
+    if (level < RAY_TRIANGLE || !skeleton_.GetNumBones())
     {
         StaticModel::ProcessRayQuery(query, results);
         return;
@@ -229,13 +229,13 @@ void AnimatedModel::UpdateBatches(const FrameInfo& frame)
 
     // Note: per-geometry distances do not take skinning into account. Especially in case of a ragdoll they may be
     // much off base if the node's own transform is not updated
-    if (batches_.Size() > 1)
+    if (batches_.Size() == 1)
+        batches_[0].distance_ = distance_;
+    else
     {
         for (unsigned i = 0; i < batches_.Size(); ++i)
             batches_[i].distance_ = frame.camera_->GetDistance(worldTransform * geometryData_[i].center_);
     }
-    else if (batches_.Size() == 1)
-        batches_[0].distance_ = distance_;
 
     // Use a transformed version of the model's bounding box instead of world bounding box for LOD scale
     // determination so that animation does not change the scale

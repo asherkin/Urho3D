@@ -117,6 +117,8 @@ UIElement::UIElement(Context* context) :
     indentSpacing_(16),
     position_(IntVector2::ZERO),
     positionDirty_(true),
+    dragButtonCombo_(0),
+    dragButtonCount_(0),
     size_(IntVector2::ZERO),
     minSize_(IntVector2::ZERO),
     maxSize_(M_MAX_INT, M_MAX_INT),
@@ -129,9 +131,7 @@ UIElement::UIElement(Context* context) :
     sortOrderDirty_(false),
     colorGradient_(false),
     traversalMode_(TM_BREADTH_FIRST),
-    elementEventSender_(false),
-    dragButtonCombo_(0),
-    dragButtonCount_(0)
+    elementEventSender_(false)
 {
     SetEnabled(false);
 }
@@ -537,11 +537,11 @@ bool UIElement::LoadXML(Deserializer& source)
     return xml->Load(source) && LoadXML(xml->GetRoot());
 }
 
-bool UIElement::SaveXML(Serializer& dest) const
+bool UIElement::SaveXML(Serializer& dest, const String& indentation) const
 {
     SharedPtr<XMLFile> xml(new XMLFile(context_));
     XMLElement rootElem = xml->CreateRoot("element");
-    return SaveXML(rootElem) && xml->Save(dest);
+    return SaveXML(rootElem) && xml->Save(dest, indentation);
 }
 
 bool UIElement::FilterAttributes(XMLElement& dest) const

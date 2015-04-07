@@ -51,8 +51,8 @@ Renderer2D::Renderer2D(Context* context) :
     indexBuffer_(new IndexBuffer(context_)),
     vertexBuffer_(new VertexBuffer(context_)),
     orderDirty_(true),
-    frustum_(0),
-    geometryCount_(0)
+    geometryCount_(0),
+    frustum_(0)
 {
     frame_.frameNumber_ = 0;
     SubscribeToEvent(E_BEGINVIEWUPDATE, HANDLER(Renderer2D, HandleBeginViewUpdate));
@@ -77,7 +77,7 @@ static inline bool CompareDrawable2Ds(Drawable2D* lhs, Drawable2D* rhs)
 
     Material* lhsUsedMaterial = lhs->GetMaterial();
     Material* rhsUsedMaterial = rhs->GetMaterial();
-    if (lhsUsedMaterial != rhsUsedMaterial)
+    if (lhsUsedMaterial && rhsUsedMaterial && lhsUsedMaterial != rhsUsedMaterial)
         return lhsUsedMaterial->GetNameHash() < rhsUsedMaterial->GetNameHash();
 
     return lhs->GetID() < rhs->GetID();
@@ -434,7 +434,7 @@ Material* Renderer2D::CreateMaterial(Texture2D* texture, BlendMode blendMode)
         material->SetName(blendModeNames[blendMode]);
 
     Technique* tech = new Technique(context_);
-    Pass* pass = tech->CreatePass(PASS_ALPHA);
+    Pass* pass = tech->CreatePass("alpha");
     pass->SetBlendMode(blendMode);
 
     pass->SetVertexShader("Urho2D");
