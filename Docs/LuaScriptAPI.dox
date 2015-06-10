@@ -63,6 +63,7 @@ namespace Urho3D
 <a href="#Class_ConstraintWheel2D"><b>ConstraintWheel2D</b></a>
 <a href="#Class_Context"><b>Context</b></a>
 <a href="#Class_Controls"><b>Controls</b></a>
+<a href="#Class_CrowdAgent"><b>CrowdAgent</b></a>
 <a href="#Class_Cursor"><b>Cursor</b></a>
 <a href="#Class_CustomGeometry"><b>CustomGeometry</b></a>
 <a href="#Class_CustomGeometryVertex"><b>CustomGeometryVertex</b></a>
@@ -70,9 +71,11 @@ namespace Urho3D
 <a href="#Class_DebugRenderer"><b>DebugRenderer</b></a>
 <a href="#Class_DecalSet"><b>DecalSet</b></a>
 <a href="#Class_Deserializer"><b>Deserializer</b></a>
+<a href="#Class_DetourCrowdManager"><b>DetourCrowdManager</b></a>
 <a href="#Class_Drawable"><b>Drawable</b></a>
 <a href="#Class_Drawable2D"><b>Drawable2D</b></a>
 <a href="#Class_DropDownList"><b>DropDownList</b></a>
+<a href="#Class_DynamicNavigationMesh"><b>DynamicNavigationMesh</b></a>
 <a href="#Class_Engine"><b>Engine</b></a>
 <a href="#Class_File"><b>File</b></a>
 <a href="#Class_FileSelector"><b>FileSelector</b></a>
@@ -81,9 +84,11 @@ namespace Urho3D
 <a href="#Class_FocusParameters"><b>FocusParameters</b></a>
 <a href="#Class_Font"><b>Font</b></a>
 <a href="#Class_Frustum"><b>Frustum</b></a>
+<a href="#Class_Geometry"><b>Geometry</b></a>
 <a href="#Class_Graphics"><b>Graphics</b></a>
 <a href="#Class_HttpRequest"><b>HttpRequest</b></a>
 <a href="#Class_Image"><b>Image</b></a>
+<a href="#Class_IndexBuffer"><b>IndexBuffer</b></a>
 <a href="#Class_Input"><b>Input</b></a>
 <a href="#Class_IntRect"><b>IntRect</b></a>
 <a href="#Class_IntVector2"><b>IntVector2</b></a>
@@ -102,6 +107,7 @@ namespace Urho3D
 <a href="#Class_Menu"><b>Menu</b></a>
 <a href="#Class_MessageBox"><b>MessageBox</b></a>
 <a href="#Class_Model"><b>Model</b></a>
+<a href="#Class_NavArea"><b>NavArea</b></a>
 <a href="#Class_Navigable"><b>Navigable</b></a>
 <a href="#Class_NavigationGeometryInfo"><b>NavigationGeometryInfo</b></a>
 <a href="#Class_NavigationMesh"><b>NavigationMesh</b></a>
@@ -110,6 +116,7 @@ namespace Urho3D
 <a href="#Class_Node"><b>Node</b></a>
 <a href="#Class_Object"><b>Object</b></a>
 <a href="#Class_ObjectAnimation"><b>ObjectAnimation</b></a>
+<a href="#Class_Obstacle"><b>Obstacle</b></a>
 <a href="#Class_Octree"><b>Octree</b></a>
 <a href="#Class_OctreeQueryResult"><b>OctreeQueryResult</b></a>
 <a href="#Class_OffMeshConnection"><b>OffMeshConnection</b></a>
@@ -135,6 +142,7 @@ namespace Urho3D
 <a href="#Class_RenderPath"><b>RenderPath</b></a>
 <a href="#Class_RenderPathCommand"><b>RenderPathCommand</b></a>
 <a href="#Class_RenderSurface"><b>RenderSurface</b></a>
+<a href="#Class_RenderTargetInfo"><b>RenderTargetInfo</b></a>
 <a href="#Class_Renderer"><b>Renderer</b></a>
 <a href="#Class_Resource"><b>Resource</b></a>
 <a href="#Class_ResourceCache"><b>ResourceCache</b></a>
@@ -191,6 +199,7 @@ namespace Urho3D
 <a href="#Class_Vector3"><b>Vector3</b></a>
 <a href="#Class_Vector4"><b>Vector4</b></a>
 <a href="#Class_VectorBuffer"><b>VectorBuffer</b></a>
+<a href="#Class_VertexBuffer"><b>VertexBuffer</b></a>
 <a href="#Class_View3D"><b>View3D</b></a>
 <a href="#Class_Viewport"><b>Viewport</b></a>
 <a href="#Class_Window"><b>Window</b></a>
@@ -369,6 +378,7 @@ Methods:
 - bool IsPlaying(const String name) const
 - bool IsFadingIn(const String name) const
 - bool IsFadingOut(const String name) const
+- bool IsAtEnd(const String name) const
 - char GetLayer(const String name) const
 - Bone* GetStartBone(const String name) const
 - const String GetStartBoneName(const String name) const
@@ -1095,6 +1105,7 @@ Methods:
 
 - void SetEnabled(bool enable)
 - void Remove()
+- void DrawDebugGeometry(DebugRenderer* debug, bool depthTest)
 - unsigned GetID() const
 - Node* GetNode() const
 - Scene* GetScene() const
@@ -1102,6 +1113,14 @@ Methods:
 - bool IsEnabledEffective() const
 - Component* GetComponent(StringHash type) const
 - Component* GetComponent(const String type) const
+
+Properties:
+
+- unsigned ID (readonly)
+- bool enabled
+- bool enabledEffective (readonly)
+- Node* node (readonly)
+- Scene* scene (readonly)
 
 <a name="Class_Connection"></a>
 ### Connection : Object
@@ -1564,6 +1583,55 @@ Properties:
 - float pitch
 - VariantMap extraData
 
+<a name="Class_CrowdAgent"></a>
+### CrowdAgent : Component
+
+Methods:
+
+- void SetNavigationFilterType(unsigned filterID)
+- void SetMoveTarget(const Vector3& position)
+- void SetMoveVelocity(const Vector3& velocity)
+- void SetUpdateNodePosition(bool unodepos)
+- void SetMaxAccel(float val)
+- void SetMaxSpeed(float val)
+- void SetNavigationQuality(NavigationQuality val)
+- void SetNavigationPushiness(NavigationPushiness val)
+- void SetRadius(float radius)
+- void SetHeight(float height)
+- unsigned GetNavigationFilterType() const
+- Vector3 GetDesiredVelocity() const
+- Vector3 GetActualVelocity() const
+- const Vector3& GetTargetPosition() const
+- CrowdAgentState GetAgentState() const
+- CrowdTargetState GetTargetState() const
+- bool GetUpdateNodePosition() const
+- float GetMaxSpeed() const
+- float GetMaxAccel() const
+- NavigationQuality GetNavigationQuality() const
+- NavigationPushiness GetNavigationPushiness() const
+- bool HasArrived() const
+- float GetRadius() const
+- float GetHeight() const
+- Vector3 GetPosition() const
+- void DrawDebugGeometry(bool depthTest)
+
+Properties:
+
+- bool updateNodePosition
+- NavigationQuality navigationQuality
+- NavigationPushiness navigationPushiness
+- float maxSpeed
+- float maxAccel
+- float radius
+- float height
+- unsigned navigationFilterType
+- Vector3 desiredVelocity (readonly)
+- Vector3 actualVelocity (readonly)
+- Vector3 targetPosition (readonly)
+- Vector3 position (readonly)
+- CrowdAgentState agentState (readonly)
+- CrowdTargetState targetState (readonly)
+
 <a name="Class_Cursor"></a>
 ### Cursor : BorderImage
 
@@ -1778,6 +1846,31 @@ Properties:
 - unsigned size (readonly)
 - bool eof (readonly)
 
+<a name="Class_DetourCrowdManager"></a>
+### DetourCrowdManager : Component
+
+Methods:
+
+- bool CreateCrowd()
+- void DrawDebugGeometry(bool depthTest)
+- void SetNavigationMesh(NavigationMesh* navMesh)
+- void SetAreaCost(unsigned filterID, unsigned areaID, float cost)
+- void SetMaxAgents(unsigned agentCt)
+- void SetCrowdTarget(const Vector3& position, int startId = 0, int endId = M_MAX_INT)
+- void ResetCrowdTarget(int startId = 0, int endId = M_MAX_INT)
+- void SetCrowdVelocity(const Vector3& velocity, int startId = 0, int endId = M_MAX_INT)
+- NavigationMesh* GetNavigationMesh() const
+- unsigned GetMaxAgents() const
+- float GetAreaCost(unsigned filterID, unsigned areaID) const
+- unsigned GetAgentCount() const
+- const PODVector<CrowdAgent*>& GetActiveAgents() const
+
+Properties:
+
+- NavigationMesh* navigationMesh
+- int maxAgents
+- unsigned agentCount (readonly)
+
 <a name="Class_Drawable"></a>
 ### Drawable : Component
 
@@ -1838,19 +1931,13 @@ Methods:
 
 - void SetLayer(int layer)
 - void SetOrderInLayer(int orderInLayer)
-- void SetTexture(Texture2D* texture)
-- void SetBlendMode(BlendMode mode)
 - int GetLayer() const
 - int GetOrderInLayer() const
-- Texture2D* GetTexture() const
-- BlendMode GetBlendMode() const
 
 Properties:
 
 - int layer
 - int orderInLayer
-- Texture2D* texture
-- BlendMode blendMode
 
 <a name="Class_DropDownList"></a>
 ### DropDownList : Menu
@@ -1887,6 +1974,21 @@ Properties:
 - UIElement* placeholder (readonly)
 - String placeholderText
 - bool resizePopup
+
+<a name="Class_DynamicNavigationMesh"></a>
+### DynamicNavigationMesh : NavigationMesh
+
+Methods:
+
+- void SetDrawObstacles(bool enable)
+- void SetMaxObstacles(unsigned maxObstacles)
+- bool GetDrawObstacles() const
+- unsigned GetMaxObstacles() const
+
+Properties:
+
+- bool drawObstacles
+- int maxObstacles
 
 <a name="Class_Engine"></a>
 ### Engine : Object
@@ -2190,6 +2292,44 @@ Methods:
 - Rect Projected(const Matrix4& transform) const
 - void UpdatePlanes()
 
+<a name="Class_Geometry"></a>
+### Geometry : Object
+
+Methods:
+
+- Geometry() (GC)
+- Geometry* new()
+- void delete()
+- bool SetNumVertexBuffers(unsigned num)
+- bool SetVertexBuffer(unsigned index, VertexBuffer* buffer, unsigned elementMask = MASK_DEFAULT)
+- void SetIndexBuffer(IndexBuffer* buffer)
+- bool SetDrawRange(PrimitiveType type, unsigned indexStart, unsigned indexCount, bool getUsedVertexRange = true)
+- bool SetDrawRange(PrimitiveType type, unsigned indexStart, unsigned indexCount, unsigned vertexStart, unsigned vertexCount, bool checkIllegal = true)
+- void SetLodDistance(float distance)
+- unsigned GetNumVertexBuffers() const
+- VertexBuffer* GetVertexBuffer(unsigned index) const
+- unsigned GetVertexElementMask(unsigned index) const
+- IndexBuffer* GetIndexBuffer() const
+- PrimitiveType GetPrimitiveType() const
+- unsigned GetIndexStart() const
+- unsigned GetIndexCount() const
+- unsigned GetVertexStart() const
+- unsigned GetVertexCount() const
+- float GetLodDistance()
+- bool IsEmpty() const
+
+Properties:
+
+- unsigned numVertexBuffers
+- IndexBuffer* indexBuffer
+- PrimitiveType primitiveType (readonly)
+- unsigned indexStart (readonly)
+- unsigned indexCount (readonly)
+- unsigned vertexStart (readonly)
+- unsigned vertexCount (readonly)
+- float lodDistance
+- bool empty (readonly)
+
 <a name="Class_Graphics"></a>
 ### Graphics : Object
 
@@ -2364,6 +2504,31 @@ Properties:
 - bool compressed (readonly)
 - CompressedFormat compressedFormat (readonly)
 - unsigned numCompressedLevels (readonly)
+
+<a name="Class_IndexBuffer"></a>
+### IndexBuffer : Object
+
+Methods:
+
+- IndexBuffer() (GC)
+- IndexBuffer* new()
+- void delete()
+- void SetShadowed(bool enable)
+- bool SetSize(unsigned indexCount, bool largeIndices, bool dynamic = false)
+- bool SetData(VectorBuffer& data)
+- bool SetDataRange(VectorBuffer& data, unsigned start, unsigned count, bool discard = false)
+- VectorBuffer GetData()
+- bool IsShadowed() const
+- bool IsDynamic() const
+- unsigned GetIndexCount() const
+- unsigned GetIndexSize() const
+
+Properties:
+
+- bool shadowed
+- bool dynamic (readonly)
+- unsigned indexCount (readonly)
+- unsigned indexSize (readonly)
 
 <a name="Class_Input"></a>
 ### Input : Object
@@ -3123,12 +3288,21 @@ Properties:
 
 Methods:
 
+- Model() (GC)
+- Model* new()
+- void delete()
 - Model* Clone(const String cloneName = String::EMPTY) const
+- void SetBoundingBox(const BoundingBox& box)
+- void SetNumGeometries(unsigned num)
+- bool SetNumGeometryLodLevels(unsigned index, unsigned num)
+- bool SetGeometry(unsigned index, unsigned lodLevel, Geometry* geometry)
+- bool SetGeometryCenter(unsigned index, const Vector3& center)
 - const BoundingBox& GetBoundingBox() const
 - Skeleton& GetSkeleton()
 - unsigned GetNumGeometries() const
 - unsigned GetNumGeometryLodLevels(unsigned index) const
 - Geometry* GetGeometry(unsigned index, unsigned lodLevel) const
+- const Vector3& GetGeometryCenter(unsigned index) const
 - unsigned GetNumMorphs() const
 - const ModelMorph* GetMorph(const String name) const
 - const ModelMorph* GetMorph(StringHash nameHash) const
@@ -3138,10 +3312,27 @@ Methods:
 
 Properties:
 
-- BoundingBox& boundingBox (readonly)
+- BoundingBox& boundingBox
 - Skeleton skeleton (readonly)
-- unsigned numGeometries (readonly)
+- unsigned numGeometries
 - unsigned numMorphs (readonly)
+
+<a name="Class_NavArea"></a>
+### NavArea : Component
+
+Methods:
+
+- unsigned GetAreaID() const
+- void SetAreaID(unsigned tolua_var_3)
+- BoundingBox GetBoundingBox()
+- void SetBoundingBox(const BoundingBox& bnds)
+- BoundingBox GetWorldBoundingBox() const
+
+Properties:
+
+- unsigned areaID
+- BoundingBox boundingBox
+- BoundingBox worldBoundingBox (readonly)
 
 <a name="Class_Navigable"></a>
 ### Navigable : Component
@@ -3185,8 +3376,12 @@ Methods:
 - void SetDetailSampleDistance(float distance)
 - void SetDetailSampleMaxError(float error)
 - void SetPadding(const Vector3& padding)
+- void SetAreaCost(unsigned areaID, float cost)
 - bool Build()
 - bool Build(const BoundingBox& boundingBox)
+- void SetPartitionType(NavmeshPartitionType aType)
+- void SetDrawOffMeshConnections(bool enable)
+- void SetDrawNavAreas(bool enable)
 - Vector3 FindNearestPoint(const Vector3& point)
 - Vector3 FindNearestPoint(const Vector3& point, const Vector3& extents)
 - Vector3 MoveAlongSurface(const Vector3& start, const Vector3& end)
@@ -3215,10 +3410,14 @@ Methods:
 - float GetDetailSampleDistance() const
 - float GetDetailSampleMaxError() const
 - const Vector3& GetPadding() const
+- float GetAreaCost(unsigned areaID) const
 - bool IsInitialized() const
 - const BoundingBox& GetBoundingBox() const
 - BoundingBox GetWorldBoundingBox() const
 - IntVector2 GetNumTiles() const
+- NavmeshPartitionType GetPartitionType()
+- bool GetDrawOffMeshConnections() const
+- bool GetDrawNavAreas() const
 
 Properties:
 
@@ -3236,6 +3435,9 @@ Properties:
 - float detailSampleDistance
 - float detailSampleMaxError
 - Vector3& padding
+- NavmeshPartitionType partitionType
+- bool drawOffMeshConnections
+- bool drawNavAreas
 - bool initialized (readonly)
 - BoundingBox& boundingBox (readonly)
 - BoundingBox worldBoundingBox (readonly)
@@ -3448,9 +3650,9 @@ Methods:
 - const Variant& GetVar(StringHash key) const
 - const VariantMap& GetVars() const
 - Component* GetComponent(const String type) const
-- void SetID(unsigned id)
-- void SetScene(Scene* scene)
-- void ResetScene()
+- const PODVector<Component*>& GetComponents(const String type, bool recursive = false)
+- const PODVector<Node*>& GetChildren(bool recursive = false)
+- const PODVector<Node*>& GetChildrenWithComponent(const String type, bool recursive = false)
 - bool Load(Deserializer& source, SceneResolver& resolver, bool loadChildren = true, bool rewriteIDs = false, CreateMode mode = REPLICATED)
 - bool LoadXML(const XMLElement& source, SceneResolver& resolver, bool loadChildren = true, bool rewriteIDs = false, CreateMode mode = REPLICATED)
 - Node* CreateChild(unsigned id, CreateMode mode)
@@ -3458,11 +3660,11 @@ Methods:
 
 Properties:
 
-- unsigned ID
+- unsigned ID (readonly)
 - String name
 - StringHash nameHash (readonly)
 - Node* parent
-- Scene* scene
+- Scene* scene (readonly)
 - bool enabled
 - bool enabledSelf (readonly)
 - Connection* owner
@@ -3523,6 +3725,22 @@ Methods:
 - WrapMode GetAttributeAnimationWrapMode(const String name) const
 - float GetAttributeAnimationSpeed(const String name) const
 
+<a name="Class_Obstacle"></a>
+### Obstacle : Component
+
+Methods:
+
+- void DrawDebugGeometry(bool depthTest)
+- void SetRadius(float radius)
+- void SetHeight(float height)
+- float GetRadius() const
+- float GetHeight() const
+
+Properties:
+
+- float radius
+- float height
+
 <a name="Class_Octree"></a>
 ### Octree : Component
 
@@ -3569,15 +3787,21 @@ Methods:
 - void SetEndPoint(Node* node)
 - void SetRadius(float radius)
 - void SetBidirectional(bool enabled)
+- void SetMask(unsigned newMask)
+- void SetAreaID(unsigned newAreaID)
 - Node* GetEndPoint() const
 - float GetRadius() const
 - bool IsBidirectional() const
+- unsigned GetMask() const
+- unsigned GetAreaID() const
 
 Properties:
 
 - Node* endPoint
 - float radius
 - bool bidirectional
+- unsigned mask
+- unsigned areaID
 
 <a name="Class_PackageEntry"></a>
 ### PackageEntry
@@ -3770,14 +3994,17 @@ Properties:
 Methods:
 
 - void SetEffect(ParticleEffect2D* effect)
-- ParticleEffect2D* GetEffect() const
 - void SetSprite(Sprite2D* sprite)
+- void SetBlendMode(BlendMode blendMode)
+- ParticleEffect2D* GetEffect() const
 - Sprite2D* GetSprite() const
+- BlendMode GetBlendMode() const
 
 Properties:
 
 - ParticleEffect2D* effect
 - Sprite2D* sprite
+- BlendMode blendMode
 
 <a name="Class_Pass"></a>
 ### Pass : RefCounted
@@ -4218,12 +4445,15 @@ Methods:
 - void SetShaderParameter(const String name, const Variant& value)
 - void RemoveShaderParameter(const String name)
 - void SetNumOutputs(unsigned num)
+- void SetOutput(unsigned index, const String name, CubeMapFace face)
 - void SetOutputName(unsigned index, const String name)
+- void SetOutputFace(unsigned index, CubeMapFace face)
 - void SetDepthStencilName(const String name)
 - const String GetTextureName(TextureUnit unit) const
 - const Variant& GetShaderParameter(const String name) const
 - unsigned GetNumOutputs() const
 - const String GetOutputName(unsigned index) const
+- CubeMapFace GetOutputFace(unsigned index) const
 - const String GetDepthStencilName() const
 
 Properties:
@@ -4241,6 +4471,7 @@ Properties:
 - Color clearColor
 - float clearDepth
 - unsigned clearStencil
+- BlendMode blendMode
 - bool enabled
 - bool useFogColor
 - bool markToStencil
@@ -4283,6 +4514,29 @@ Properties:
 - RenderSurfaceUpdateMode updateMode
 - RenderSurface* linkedRenderTarget
 - RenderSurface* linkedDepthStencil
+
+<a name="Class_RenderTargetInfo"></a>
+### RenderTargetInfo
+
+
+Methods:
+
+- RenderTargetInfo() (GC)
+- RenderTargetInfo* new()
+- void Load(const XMLElement& element)
+
+Properties:
+
+- String name
+- String tag
+- unsigned format
+- Vector2 size
+- RenderTargetSizeMode sizeMode
+- bool enabled
+- bool cubemap
+- bool filtered
+- bool sRGB
+- bool persistent
 
 <a name="Class_Renderer"></a>
 ### Renderer
@@ -4417,6 +4671,7 @@ Methods:
 - void SetFinishBackgroundResourcesMs(int ms)
 - File* GetFile(const String name)
 - Resource* GetResource(const String type, const String name, bool sendEventOnFailure = true)
+- Resource* GetExistingResource(const String type, const String name)
 - bool BackgroundLoadResource(const String type, const String name, bool sendEventOnFailure = true)
 - unsigned GetNumBackgroundLoadResources() const
 - const Vector<String>& GetResourceDirs() const
@@ -5232,6 +5487,7 @@ Properties:
 Methods:
 
 - void SetSprite(Sprite2D* sprite)
+- void SetBlendMode(BlendMode mode)
 - void SetFlip(bool flipX, bool flipY)
 - void SetFlipX(bool flipX)
 - void SetFlipY(bool flipY)
@@ -5239,23 +5495,28 @@ Methods:
 - void SetAlpha(float alpha)
 - void SetUseHotSpot(bool useHotSpot)
 - void SetHotSpot(const Vector2& hotspot)
+- void SetCustomMaterial(Material* customMaterial)
 - Sprite2D* GetSprite() const
+- BlendMode GetBlendMode() const
 - bool GetFlipX() const
 - bool GetFlipY() const
 - const Color& GetColor() const
 - float GetAlpha() const
 - bool GetUseHotSpot() const
 - const Vector2& GetHotSpot() const
+- Material* GetCustomMaterial() const
 
 Properties:
 
 - Sprite2D* sprite
+- BlendMode blendMode
 - bool flipX
 - bool flipY
 - Color& color
 - float alpha
 - bool useHotSpot
 - Vector2 hotSpot
+- Material* customMaterial
 
 <a name="Class_StringHash"></a>
 ### StringHash
@@ -5575,6 +5836,7 @@ Methods:
 - TextureUsage GetUsage() const
 - unsigned GetDataSize(int width, int height) const
 - unsigned GetRowDataSize(int width) const
+- unsigned GetComponents() const
 
 Properties:
 
@@ -5583,6 +5845,7 @@ Properties:
 - unsigned levels (readonly)
 - int width (readonly)
 - int height (readonly)
+- unsigned components (readonly)
 - TextureFilterMode filterMode
 - Color& borderColor
 - bool sRGB
@@ -5648,7 +5911,6 @@ Properties:
 
 Methods:
 
-- void DrawDebugGeometry(DebugRenderer* debug, bool depthTest)
 - void SetTmxFile(TmxFile2D* tmxFile)
 - TmxFile2D* GetTmxFile() const
 - const TileMapInfo2D& GetInfo() const
@@ -5687,7 +5949,6 @@ Properties:
 
 Methods:
 
-- void DrawDebugGeometry(DebugRenderer* debug, bool depthTest)
 - void SetDrawOrder(int drawOrder)
 - void SetVisible(bool visible)
 - int GetDrawOrder() const
@@ -6200,7 +6461,7 @@ Methods:
 - void SetMatrix3x4(const Matrix3x4& value)
 - void SetMatrix4(const Matrix4& value)
 - int GetInt() const
-- int GetUInt() const
+- unsigned GetUInt() const
 - StringHash GetStringHash()
 - bool GetBool() const
 - float GetFloat() const
@@ -6524,6 +6785,33 @@ Properties:
 - unsigned position (readonly)
 - unsigned size (readonly)
 - bool eof (readonly)
+
+<a name="Class_VertexBuffer"></a>
+### VertexBuffer : Object
+
+Methods:
+
+- VertexBuffer() (GC)
+- VertexBuffer* new()
+- void delete()
+- void SetShadowed(bool enable)
+- bool SetSize(unsigned vertexCount, unsigned elementMask, bool dynamic = false)
+- bool SetData(VectorBuffer& data)
+- bool SetDataRange(VectorBuffer& data, unsigned start, unsigned count, bool discard = false)
+- VectorBuffer GetData()
+- bool IsShadowed() const
+- bool IsDynamic() const
+- unsigned GetVertexCount() const
+- unsigned GetVertexSize() const
+- unsigned GetElementMask() const
+
+Properties:
+
+- bool shadowed
+- bool dynamic (readonly)
+- unsigned vertexCount (readonly)
+- unsigned vertexSize (readonly)
+- unsigned elementMask (readonly)
 
 <a name="Class_View3D"></a>
 ### View3D : Window
@@ -6851,6 +7139,22 @@ Properties:
 - int REPLICATED
 - int LOCAL
 
+### CrowdAgentState
+
+- int CROWD_AGENT_INVALID
+- int CROWD_AGENT_READY
+- int CROWD_AGENT_TRAVERSINGLINK
+
+### CrowdTargetState
+
+- int CROWD_AGENT_TARGET_NONE
+- int CROWD_AGENT_TARGET_FAILED
+- int CROWD_AGENT_TARGET_VALID
+- int CROWD_AGENT_TARGET_REQUESTING
+- int CROWD_AGENT_TARGET_WAITINGFORQUEUE
+- int CROWD_AGENT_TARGET_WAITINGFORPATH
+- int CROWD_AGENT_TARGET_VELOCITY
+
 ### CubeMapFace
 
 - int FACE_POSITIVE_X
@@ -7024,6 +7328,23 @@ Properties:
 - int MM_RELATIVE
 - int MM_WRAP
 
+### NavigationPushiness
+
+- int PUSHINESS_LOW
+- int PUSHINESS_MEDIUM
+- int PUSHINESS_HIGH
+
+### NavigationQuality
+
+- int NAVIGATIONQUALITY_LOW
+- int NAVIGATIONQUALITY_MEDIUM
+- int NAVIGATIONQUALITY_HIGH
+
+### NavmeshPartitionType
+
+- int NAVMESH_PARTITION_WATERSHED
+- int NAVMESH_PARTITION_MONOTONE
+
 ### Orientation
 
 - int O_HORIZONTAL
@@ -7056,6 +7377,11 @@ Properties:
 - int RAY_OBB
 - int RAY_TRIANGLE
 
+### RenderCommandSortMode
+
+- int SORT_FRONTTOBACK
+- int SORT_BACKTOFRONT
+
 ### RenderCommandType
 
 - int CMD_NONE
@@ -7071,6 +7397,12 @@ Properties:
 - int SURFACE_MANUALUPDATE
 - int SURFACE_UPDATEVISIBLE
 - int SURFACE_UPDATEALWAYS
+
+### RenderTargetSizeMode
+
+- int SIZE_ABSOLUTE
+- int SIZE_VIEWPORTDIVISOR
+- int SIZE_VIEWPORTMULTIPLIER
 
 ### ShaderType
 
@@ -7533,6 +7865,21 @@ Properties:
 - int LOG_INFO
 - int LOG_NONE
 - int LOG_WARNING
+- unsigned MASK_BLENDINDICES
+- unsigned MASK_BLENDWEIGHTS
+- unsigned MASK_COLOR
+- unsigned MASK_CUBETEXCOORD1
+- unsigned MASK_CUBETEXCOORD2
+- unsigned MASK_DEFAULT
+- unsigned MASK_INSTANCEMATRIX1
+- unsigned MASK_INSTANCEMATRIX2
+- unsigned MASK_INSTANCEMATRIX3
+- unsigned MASK_NONE
+- unsigned MASK_NORMAL
+- unsigned MASK_POSITION
+- unsigned MASK_TANGENT
+- unsigned MASK_TEXCOORD1
+- unsigned MASK_TEXCOORD2
 - int MAX_VERTEX_LIGHTS
 - int MOUSEB_LEFT
 - int MOUSEB_MIDDLE

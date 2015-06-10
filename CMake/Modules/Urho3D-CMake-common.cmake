@@ -22,7 +22,7 @@
 
 # Limit the supported build configurations
 set (URHO3D_BUILD_CONFIGURATIONS Release RelWithDebInfo Debug)
-set (DOC_STRING "Choose the build configuration, possible options are: ${URHO3D_BUILD_CONFIGURATIONS}")
+set (DOC_STRING "Specify CMake build configuration (single-configuration generator only), possible values are Release (default), RelWithDebInfo, and Debug")
 if (CMAKE_CONFIGURATION_TYPES)
     # For multi-configurations generator, such as VS and Xcode
     set (CMAKE_CONFIGURATION_TYPES ${URHO3D_BUILD_CONFIGURATIONS} CACHE STRING "${DOC_STRING}" FORCE)
@@ -68,7 +68,7 @@ if (ANDROID OR RPI OR EMSCRIPTEN)
     # This build option is not available on Android, Raspberry-Pi, and Emscripten platforms as its value is preset by the chosen toolchain in the build tree
     set (URHO3D_64BIT ${URHO3D_DEFAULT_64BIT})
 else ()
-    option (URHO3D_64BIT "Enable 64-bit build" ${URHO3D_DEFAULT_64BIT})
+    option (URHO3D_64BIT "Enable 64-bit build, on MSVC default to 0, on other compilers the default is set based on the 64-bit capability of the chosen toolchain on host system" ${URHO3D_DEFAULT_64BIT})
 endif ()
 cmake_dependent_option (URHO3D_ANGELSCRIPT "Enable AngelScript scripting support" TRUE "NOT EMSCRIPTEN" FALSE)
 option (URHO3D_LUA "Enable additional Lua scripting support")
@@ -114,7 +114,7 @@ option (URHO3D_TESTING "Enable testing support")
 if (URHO3D_TESTING)
     if (EMSCRIPTEN)
         set (DEFAULT_TIMEOUT 10)
-        set (EMSCRIPTEN_EMRUN_BROWSER firefox CACHE STRING "Specify the particular browser to be spawned by emrun during testing (Emscripten cross-compiling build only), default to firefox")
+        set (EMSCRIPTEN_EMRUN_BROWSER firefox CACHE STRING "Specify the particular browser to be spawned by emrun during testing (Emscripten cross-compiling build only), use 'emrun --list_browsers' command to get the list of possible values")
     else ()
         set (DEFAULT_TIMEOUT 5)
     endif ()
@@ -168,6 +168,13 @@ endif ()
 if (MINGW AND CMAKE_CROSSCOMPILING)
     set (MINGW_PREFIX "" CACHE STRING "Prefix path to MinGW cross-compiler tools (MinGW cross-compiling build only)")
     set (MINGW_SYSROOT "" CACHE PATH "Path to MinGW system root (MinGW cross-compiling build only)")
+    # When cross-compiling then we are most probably in Unix-alike host environment which should not have problem to handle long include dirs
+    # This change is required to keep ccache happy because it does not like the CMake generated include response file
+    foreach (lang C CXX)
+        foreach (cat OBJECTS INCLUDES)
+            unset (CMAKE_${lang}_USE_RESPONSE_FILE_FOR_${cat})
+        endforeach ()
+    endforeach ()
 endif ()
 if (RPI)
     if (NOT RPI_SUPPORTED_ABIS)
@@ -203,13 +210,14 @@ if (RPI)
     else ()
         set (RPI_ABI armeabi-v6)
     endif ()
-    set (RPI_ABI ${RPI_ABI} CACHE STRING "Specify target ABI (RPI build only), possible values are armeabi-v6 (*default for RPI 1), armeabi-v7a (*default for RPI 2), armeabi-v7a with NEON, and armeabi-v7a with VFPV4" FORCE)
+    set (RPI_ABI ${RPI_ABI} CACHE STRING "Specify target ABI (RPI build only), possible values are armeabi-v6 (default for RPI 1), armeabi-v7a (default for RPI 2), armeabi-v7a with NEON, and armeabi-v7a with VFPV4" FORCE)
 endif ()
 if (EMSCRIPTEN)     # CMAKE_CROSSCOMPILING is always true for Emscripten
     set (EMSCRIPTEN_ROOT_PATH "" CACHE PATH "Root path to Emscripten cross-compiler tools (Emscripten cross-compiling build only)")
     set (EMSCRIPTEN_SYSROOT "" CACHE PATH "Path to Emscripten system root (Emscripten cross-compiling build only)")
     option (EMSCRIPTEN_ALLOW_MEMORY_GROWTH "Enable memory growing based on application demand (Emscripten cross-compiling build only)")
     math (EXPR EMSCRIPTEN_TOTAL_MEMORY "32 * 1024 * 1024")     # This option is ignored when EMSCRIPTEN_ALLOW_MEMORY_GROWTH option is set
+    set (EMSCRIPTEN_TOTAL_MEMORY ${EMSCRIPTEN_TOTAL_MEMORY} CACHE STRING "Specify the total size of memory to be used (Emscripten cross-compiling build only); default to 33554432 (32MB), this option is ignored when EMSCRIPTEN_ALLOW_MEMORY_GROWTH=1")
     cmake_dependent_option (EMSCRIPTEN_SHARE_DATA "Enable sharing data file support (Emscripten cross-compiling build only)" FALSE "EMSCRIPTEN" FALSE)
 endif ()
 # Constrain the build option values in cmake-gui, if applicable
@@ -342,15 +350,18 @@ if (NOT URHO3D_LIB_TYPE STREQUAL SHARED)
     add_definitions (-DURHO3D_STATIC_DEFINE)
 endif ()
 
-# Find DirectX SDK include & library directories for Visual Studio. It is also possible to compile
-# without if a recent Windows SDK is installed. The SDK is not searched for with MinGW as it is
-# incompatible; rather, it is assumed that MinGW itself comes with the necessary headers & libraries.
+# Find Direct3D include & library directories for Visual Studio in MS Windows SDK or DirectX SDK.
+# The SDK is not searched for with MinGW as it is incompatible, rather, it is assumed that MinGW
+# itself comes with the necessary headers & libraries.
 # Note that when building for OpenGL, any libraries are not used, but the include directory may
 # be necessary for DirectInput & DirectSound headers, if those are not present in the compiler's own
 # default includes.
 if (WIN32)
-    find_package (Direct3D)
-    if (DIRECT3D_FOUND)
+    if (MSVC)
+        set (D3D_REQUIRED REQUIRED)
+    endif ()
+    find_package (Direct3D ${D3D_REQUIRED})
+    if (DIRECT3D_FOUND AND DIRECT3D_INCLUDE_DIRS)
         include_directories (${DIRECT3D_INCLUDE_DIRS})
     endif ()
 endif ()
@@ -457,8 +468,14 @@ else ()
             # Emscripten-specific setup
             set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-warn-absolute-paths -Wno-unknown-warning-option")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-warn-absolute-paths -Wno-unknown-warning-option")
-            set (CMAKE_C_FLAGS_RELEASE "-Oz")
-            set (CMAKE_CXX_FLAGS_RELEASE "-Oz")
+            # Prior to version 1.31.3 emcc does not consistently add the cpp standard and remove Emscripten-specific compiler flags
+            # before passing on the work to the underlying LLVM/Clang compiler, this has resulted in preprocessing error when enabling the PCH and ccache
+            # (See https://github.com/kripken/emscripten/issues/3365 for more detail)
+            if (EMCC_VERSION VERSION_LESS 1.31.3)
+                set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++03")
+            endif ()
+            set (CMAKE_C_FLAGS_RELEASE "-Oz -DNDEBUG")
+            set (CMAKE_CXX_FLAGS_RELEASE "-Oz -DNDEBUG")
             if (DEFINED ENV{CI})
                 # Our CI server is slow, so do not optimize and discard all debug info when test building in Debug configuration
                 set (CMAKE_C_FLAGS_DEBUG "-g0")
@@ -483,13 +500,14 @@ else ()
         set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG")
     endif ()
     if (CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-        if (CMAKE_GENERATOR STREQUAL Ninja)
-            set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fcolor-diagnostics")
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
+        if (CMAKE_GENERATOR STREQUAL Ninja OR "$ENV{USE_CCACHE}")
+            # When ccache support is on, these flags keep the color diagnostics pipe through ccache output and suppress Clang warning due ccache internal preprocessing step
+            set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fcolor-diagnostics -Qunused-arguments")
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics -Qunused-arguments")
         endif ()
         # Temporary workaround for Travis CI VM as Ubuntu 12.04 LTS still uses old glibc header files that do not have the necessary patch for Clang to work correctly
         # TODO: Remove this workaround when Travis CI VM has been migrated to Ubuntu 14.04 LTS (or hopefully it will be CentOS :)
-        if (DEFINED ENV{CI} AND "$ENV{LINUX}" STREQUAL 1)
+        if (DEFINED ENV{CI} AND "$ENV{LINUX}")
             add_definitions (-D__extern_always_inline=inline)
         endif ()
     endif ()
@@ -581,7 +599,7 @@ macro (enable_pch HEADER_PATHNAME)
                         # Precompiling header file
                         set_property (SOURCE ${FILE} APPEND_STRING PROPERTY COMPILE_FLAGS " /Fp$(IntDir)${PCH_FILENAME} /Yc${HEADER_FILENAME}")     # Need a leading space for appending
                     else ()
-                        # Use the precompiled header file
+                        # Using precompiled header file
                         get_property (NO_PCH SOURCE ${FILE} PROPERTY NO_PCH)
                         if (NOT NO_PCH)
                             set_property (SOURCE ${FILE} APPEND_STRING PROPERTY COMPILE_FLAGS " /Fp$(IntDir)${PCH_FILENAME} /Yu${HEADER_FILENAME} /FI${HEADER_FILENAME}")
@@ -605,10 +623,19 @@ macro (enable_pch HEADER_PATHNAME)
                 list (APPEND SOURCE_FILES ${CXX_FILENAME})
             endif ()
         endif ()
+    elseif (XCODE)
+        if (TARGET ${TARGET_NAME})
+            # Precompiling and using precompiled header file
+            set_target_properties (${TARGET_NAME} PROPERTIES XCODE_ATTRIBUTE_GCC_PRECOMPILE_PREFIX_HEADER YES XCODE_ATTRIBUTE_GCC_PREFIX_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/${HEADER_PATHNAME})
+            unset (${TARGET_NAME}_HEADER_PATHNAME)
+        else ()
+            # The target has not been created yet, so set an internal variable to come back here again later
+            set (${TARGET_NAME}_HEADER_PATHNAME ${HEADER_PATHNAME})
+        endif ()
     else ()
         # GCC or Clang
         if (TARGET ${TARGET_NAME})
-            # Cache the compiler flags setup for the current scope so far
+            # Precompiling header file
             get_directory_property (COMPILE_DEFINITIONS COMPILE_DEFINITIONS)
             get_directory_property (INCLUDE_DIRECTORIES INCLUDE_DIRECTORIES)
             get_target_property (TYPE ${TARGET_NAME} TYPE)
@@ -648,12 +675,18 @@ macro (enable_pch HEADER_PATHNAME)
                     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${HEADER_FILENAME}.${CONFIG}.pch.rsp ${DEPS}
                     COMMENT "Precompiling header file '${HEADER_FILENAME}' for ${CONFIG} configuration")
             endforeach ()
-            # Use the precompiled header file
+            # Using precompiled header file
+            if ($ENV{COVERITY_SCAN_BRANCH})
+                # Coverity scan does not support PCH so workaround by including the actual header file
+                set (ABS_PATH_PCH ${CMAKE_CURRENT_SOURCE_DIR}/${HEADER_PATHNAME})
+            else ()
+                set (ABS_PATH_PCH ${CMAKE_CURRENT_BINARY_DIR}/${HEADER_FILENAME})
+            endif ()
             foreach (FILE ${SOURCE_FILES})
                 if (FILE MATCHES \\.cpp$)
                     get_property (NO_PCH SOURCE ${FILE} PROPERTY NO_PCH)
                     if (NOT NO_PCH)
-                        set_property (SOURCE ${FILE} APPEND_STRING PROPERTY COMPILE_FLAGS " -include ${HEADER_FILENAME}")
+                        set_property (SOURCE ${FILE} APPEND_STRING PROPERTY COMPILE_FLAGS " -include ${ABS_PATH_PCH}")
                     endif ()
                 endif ()
             endforeach ()
@@ -672,12 +705,6 @@ macro (enable_pch HEADER_PATHNAME)
                 set (TRIGGERS ${HEADER_FILENAME}.${CMAKE_BUILD_TYPE}.pch.trigger)
             endif ()
             list (APPEND SOURCE_FILES ${TRIGGERS})
-            # Ninja-build specific
-            if (CMAKE_GENERATOR STREQUAL Ninja)
-                # The precompiled header is always generated in the current binary dir,
-                # but Ninja project is not able to find it without adding the binary dir to the include search path
-                list (APPEND INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR})
-            endif ()
         endif ()
     endif ()
 endmacro ()
@@ -814,6 +841,10 @@ macro (setup_executable)
             install (FILES ${FILES} DESTINATION ${DEST_BUNDLE_DIR} OPTIONAL)    # We get html.map or html.mem depend on the build configuration
         else ()
             install (TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${DEST_RUNTIME_DIR} BUNDLE DESTINATION ${DEST_BUNDLE_DIR})
+            if (MSVC AND DIRECT3D_DLL AND NOT DIRECT3D_DLL_INSTALLED)
+                install (FILES ${DIRECT3D_DLL} DESTINATION ${DEST_RUNTIME_DIR})
+                set (DIRECT3D_DLL_INSTALLED TRUE)
+            endif ()
         endif ()
     endif ()
 endmacro ()
@@ -1073,7 +1104,7 @@ macro (setup_main_executable)
                 else ()
                     set (OUTPUT_COMMAND true)   # Nothing to output
                 endif ()
-                list (APPEND COMMANDS COMMAND echo Checking ${DIR}... && \(\( `find ${DIR} -newer ${DIR} |wc -l` \)\) && touch -cm ${DIR} ${PACKAGING_COMMAND} || ${OUTPUT_COMMAND})
+                list (APPEND COMMANDS COMMAND echo Checking ${DIR}... && bash -c \"\(\( `find ${DIR} -newer ${DIR} |wc -l` \)\)\" && touch -cm ${DIR} ${PACKAGING_COMMAND} || ${OUTPUT_COMMAND})
             endif ()
         endforeach ()
         string (MD5 MD5ALL ${MD5ALL})
@@ -1099,8 +1130,11 @@ macro (setup_main_executable)
             get_filename_component (NAME ${FILE} NAME)
             list (APPEND PAK_NAMES ${NAME})
         endforeach ()
+        if (CMAKE_BUILD_TYPE STREQUAL Debug AND EMCC_VERSION VERSION_GREATER 1.32.2)
+            set (SEPARATE_METADATA --separate-metadata)
+        endif ()
         add_custom_command (OUTPUT ${SHARED_RESOURCE_JS}.data
-            COMMAND ${EMPACKAGER} ${SHARED_RESOURCE_JS}.data --preload ${PAK_NAMES} --js-output=${SHARED_RESOURCE_JS} --use-preload-cache
+            COMMAND ${EMPACKAGER} ${SHARED_RESOURCE_JS}.data --preload ${PAK_NAMES} --js-output=${SHARED_RESOURCE_JS} --use-preload-cache ${SEPARATE_METADATA}
             DEPENDS RESOURCE_CHECK ${RESOURCE_PAKS}
             WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
             COMMENT "Generating shared data file")
@@ -1124,8 +1158,14 @@ macro (setup_test)
         endif ()
         list (APPEND ARG_OPTIONS -timeout ${URHO3D_TEST_TIMEOUT})
         if (EMSCRIPTEN)
-            math (EXPR EMRUN_TIMEOUT "2 * ${URHO3D_TEST_TIMEOUT}")
-            add_test (NAME ${ARG_NAME} COMMAND ${EMRUN} --browser ${EMSCRIPTEN_EMRUN_BROWSER} --timeout ${EMRUN_TIMEOUT} --timeout_returncode 1 --kill_exit ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TARGET_NAME}.html ${ARG_OPTIONS})
+            if (DEFINED ENV{CI})
+                # The latency on Travis CI server could be very high at time, so add some adjustment
+                # If it is not enough causing a test case failure then so be it because it is better that than wait for it and still ends up in build error due to time limit
+                set (EMRUN_TIMEOUT_ADJUSTMENT + 8 * \\${URHO3D_TEST_TIMEOUT})
+                set (EMRUN_TIMEOUT_RETURNCODE --timeout_returncode 0)
+            endif ()
+            math (EXPR EMRUN_TIMEOUT "2 * ${URHO3D_TEST_TIMEOUT} ${EMRUN_TIMEOUT_ADJUSTMENT}")
+            add_test (NAME ${ARG_NAME} COMMAND ${EMRUN} --browser ${EMSCRIPTEN_EMRUN_BROWSER} --timeout ${EMRUN_TIMEOUT} ${EMRUN_TIMEOUT_RETURNCODE} --kill_exit ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TARGET_NAME}.html ${ARG_OPTIONS})
         else ()
             add_test (NAME ${ARG_NAME} COMMAND ${TARGET_NAME} ${ARG_OPTIONS})
         endif ()
@@ -1434,6 +1474,19 @@ elseif (EMSCRIPTEN)
         string (REPLACE "<!doctype html>" "<!-- This is a generated file. DO NOT EDIT!-->\n\n<!doctype html>" SHELL_HTML "${SHELL_HTML}")     # Stringify to preserve semicolons
         string (REPLACE "<body>" "<body>\n\n<a href=\"http://urho3d.github.io\" title=\"Urho3D Homepage\"><img src=\"http://urho3d.github.io/assets/images/logo.png\" alt=\"link to http://urho3d.github.io\" height=\"80\" width=\"320\" /></a>\n" SHELL_HTML "${SHELL_HTML}")
         file (WRITE ${CMAKE_BINARY_DIR}/Source/shell.html "${SHELL_HTML}")
+    endif ()
+elseif (NOT CMAKE_CROSSCOMPILING AND NOT CMAKE_HOST_WIN32 AND "$ENV{USE_CCACHE}")
+    # Warn user if PATH environment variable has not been correctly set for using ccache
+    if (APPLE)
+        set (WHEREIS brew info ccache)
+    else ()
+        set (WHEREIS whereis -b ccache)
+    endif ()
+    execute_process (COMMAND ${WHEREIS} COMMAND grep -o \\S*lib\\S* RESULT_VARIABLE EXIT_CODE OUTPUT_VARIABLE CCACHE_SYMLINK ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if (EXIT_CODE EQUAL 0 AND NOT $ENV{PATH} MATCHES "${CCACHE_SYMLINK}")  # Need to stringify because CCACHE_SYMLINK variable could be empty when the command failed
+        message (WARNING "The lib directory containing the ccache symlinks (${CCACHE_SYMLINK}) has not been added in the PATH environment variable. "
+            "This is required to enable ccache support for native compiler toolchain. CMake has been configured to use the actual compiler toolchain instead of ccache. "
+            "In order to rectify this, the build tree must be regenerated after the PATH environment variable has been adjusted accordingly.")
     endif ()
 endif ()
 
